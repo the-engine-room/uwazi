@@ -1,6 +1,6 @@
 header {
-	background: $c-white;
-	border-bottom: 1px solid $c-grey;
+	background: $c-primary;
+	border-bottom: 1px solid $c-primary-dark;
 	z-index: 40;
 	position: fixed;
 	top: 0;
@@ -16,25 +16,27 @@ header {
 		@include desktop {
 			display: block;
 		}
+
+    a {
+      color: $c-white;
+    }
 	}
 
 	.input-group {
 		line-height: 50px;
-		padding: 5px 30px;
-		@include desktop {
-			padding: 5px 0;
-		}
+		padding: 5px 0;
+    z-index: 1;
 
 		.btn {
-			height: 32px;
-			line-height: 32px;
+			height: 50px;
+			line-height: 50px;
 			border: 0;
-			border: 1px solid $c-grey;
+			border: 1px solid $c-shadow-dark;
 			border-right: 0;
-			background: $c-grey-light;
+			background: $c-shadow;
 			border-radius: 0;
 			box-shadow: none;
-			color: $c-grey-dark;
+			color: $c-white;
 			padding: 0 10px;
 		}
 		.dropdown-toggle {
@@ -48,52 +50,38 @@ header {
 		}
 		.form-control {
 			padding: 0;
-			line-height: 32px;
+      height: 50px;
+      line-height: 50px;
 			float: none;
-			background: none;
-		  border: 0;
-			border: 1px solid $c-grey;
+			border: 1px solid $c-shadow-dark;
 			border-left: 0;
-			background: $c-grey-light;
+			background: $c-shadow;
 			border-radius: 0;
 		  box-shadow: none;
-			color: $c-black;
+			color: $c-white;
 
-			&::-webkit-input-placeholder { color: $c-grey-dark; }
-					 &:-ms-input-placeholder { color: $c-grey-dark; }
-							 &::-moz-placeholder { color: $c-grey-dark; }
-							  &:-moz-placeholder { color: $c-grey-dark; }
+			&::-webkit-input-placeholder { color: $c-white; }
+					 &:-ms-input-placeholder { color: $c-white; }
+							 &::-moz-placeholder { color: $c-white; }
+							  &:-moz-placeholder { color: $c-white; }
 		}
 
-		.btn {
-			.fa-search { display: inline-block; }
-			.fa-close { display: none; }
-		}
+		.fa-search { display: inline-block; }
+		.fa-close { display: none; }
 
 		&.active {
-			.btn {
-				.fa-search { display: none; }
-				.fa-close { display: inline-block; }
-			}
-		}
-	}
-
-	.nav-pills {
-		display: none;
-		text-align: right;
-		line-height: 60px;
-		@include desktop {
-			display: block;
-		}
-		> li {
-			display: inline-block;
-			float: none;
-		}
-		i {
-			margin-right: 3px;
-		}
-		a {
-			color: $c-black;
+      .btn {
+        color: $c-black;
+        border-color: $c-grey;
+        background-color: $c-white;
+      }
+      .form-control {
+        color: $c-black;
+        border-color: $c-grey;
+        background-color: $c-white;
+      }
+      .fa-search { display: none; }
+      .fa-close { display: inline-block; }
 		}
 	}
 
@@ -124,7 +112,7 @@ header {
 .search-suggestions {
 	display: none;
 	position: absolute;
-  top: 61px;
+  top: 54px;
 	left: 0;
 	width: 100%;
   background: $c-white;
@@ -132,7 +120,7 @@ header {
 	color: $c-black;
   border: 1px solid $c-grey;
 	border-top: 0;
-  padding: 15px 15px 0;
+  padding: 0 15px;
 	box-shadow: $shadow;
 	line-height: 2em;
 	&.active {
@@ -170,5 +158,26 @@ header {
 
 	.fa {
 		margin-right: 5px;
+	}
+}
+
+header {
+  .nav-pills {
+		display: none;
+		text-align: right;
+		line-height: 60px;
+		@include desktop {
+			display: block;
+		}
+		> li {
+			display: inline-block;
+			float: none;
+		}
+		i {
+			margin-right: 3px;
+		}
+		a {
+			color: $c-white;
+		}
 	}
 }
