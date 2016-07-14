@@ -21,10 +21,10 @@
   margin: 0 0 15px;
   background: $c-white;
   border-radius: 3px;
-  border-bottom: 1px solid $c-grey;
-  box-shadow: $shadow;
+  border: 1px solid $c-shadow;
+  border-bottom: 3px solid $c-shadow;
   opacity: 1;
-  transition: all 300ms;
+  transition: width 300ms;
   zoom: 1;
 
   @media (min-width: 640px) {
@@ -38,27 +38,20 @@
     content: " ";
     display: block;
     position: absolute;
-    top: 0;
-    right: 0;
+    top: -1px;
+    right: -1px;
     border: 6px solid;
-    border-color: $c-primary-lighten $c-primary-lighten $c-white $c-white;
+    border-color: $c-grey-lighten $c-grey-lighten $c-white $c-white;
     border-bottom-left-radius: 3px;
-    box-shadow: -3px 3px 9px -3px $c-grey;
-    transition: all 300ms;
+    box-shadow: -1px 1px 0 0 $c-shadow;
   }
 
   &:hover{
     cursor: pointer;
+    border-bottom-color: $c-shadow-dark;
   }
   &.is-active {
-    box-shadow: $shadow-active;
-    top: -3px;
-  }
-  &.is-disabled {
-    opacity: 0.3;
-    &:hover {
-      opacity: 1;
-    }
+    border-bottom-color: $c-primary;
   }
 
   .label {
