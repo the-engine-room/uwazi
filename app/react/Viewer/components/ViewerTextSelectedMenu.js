@@ -8,6 +8,7 @@ export class ViewerTextSelectedMenu extends Component {
   render() {
     return (
       <div className={this.props.active ? 'active' : ''}>
+        <div className="float-btn__main cta"><i className="fa fa-plus"></i></div>
         <div className="float-btn__sec" onClick={this.props.openPanel.bind(null, 'targetReferencePanel')}>
           <span>Connect to a paragraph</span>
           <i className="fa fa-paragraph"></i>
@@ -16,7 +17,6 @@ export class ViewerTextSelectedMenu extends Component {
           <span>Connect to a document</span>
           <i className="fa fa-file-o"></i>
         </div>
-        <div className="float-btn__main cta"><i className="fa fa-plus"></i></div>
       </div>
     );
   }

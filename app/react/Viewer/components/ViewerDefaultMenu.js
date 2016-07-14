@@ -9,6 +9,7 @@ export class ViewerDefaultMenu extends Component {
   render() {
     return (
       <div className={this.props.active ? 'active' : ''}>
+        <div className="float-btn__main"><i className="fa fa-bar-chart"></i></div>
         <div onClick={this.props.openPanel.bind(null, 'viewMetadataPanel')} className="float-btn__sec view-metadata">
           <span>View metadata</span>
           <i className="fa fa-list-alt">
@@ -18,7 +19,6 @@ export class ViewerDefaultMenu extends Component {
           <span>View relationships</span>
           <i className="fa fa-link"></i>
         </div>
-        <div className="float-btn__main"><i className="fa fa-bar-chart"></i></div>
       </div>
     );
   }

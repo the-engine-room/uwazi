@@ -67,10 +67,10 @@ class App extends Component {
                 <i className="fa fa-filter"></i>
                 <i className="fa fa-bars"></i>
                 <h1 className="col-sm-3"><SiteName/></h1>
-                <div className="col-sm-5">
+                {/*<div className="col-sm-5">
                   {this.renderTools()}
                 </div>
-                <Menu className="nav nav-pills col-sm-4" />
+                <Menu className="nav nav-pills col-sm-9" />*/}
               </div>
             </div>
           </header>
