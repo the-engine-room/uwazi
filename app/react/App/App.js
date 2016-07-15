@@ -57,20 +57,21 @@ class App extends Component {
         />
         <Notifications />
         <div className="content">
+          {/*
           <nav>
             <h1><SiteName/></h1>
             <button onClick={this.toggleMenu.bind(this)} type="button" className={menuToggleClass}><i className="fa fa-bars"/></button>
           </nav>
+          */}
           <header>
             <div className="container-fluid">
               <div className="row">
-                <i className="fa fa-filter"></i>
                 <i className="fa fa-bars"></i>
-                <h1 className="col-sm-3"><SiteName/></h1>
+                <h1><SiteName/></h1>
+                <Menu className="nav nav-pills" />
                 {/*<div className="col-sm-5">
                   {this.renderTools()}
-                </div>
-                <Menu className="nav nav-pills col-sm-9" />*/}
+                </div>*/}
               </div>
             </div>
           </header>

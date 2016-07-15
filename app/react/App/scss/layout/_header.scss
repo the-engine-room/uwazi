@@ -13,7 +13,9 @@ header {
 		line-height: 60px;
 		display: none;
 		@include desktop {
-			display: block;
+      float: left;
+      display: block;
+      padding: 0 15px;
 		}
 
     a {
@@ -163,15 +165,20 @@ header {
 header {
   .nav-pills {
 		display: none;
-		text-align: right;
+		text-align: left;
 		line-height: 60px;
 		@include desktop {
 			display: block;
+      max-width: 1024px;
+      margin: auto;
 		}
 		> li {
 			display: inline-block;
 			float: none;
 		}
+    > li:first-child {
+      margin-left: -15px;
+    }
 		i {
 			margin-right: 3px;
 		}
