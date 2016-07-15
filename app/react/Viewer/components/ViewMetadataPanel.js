@@ -29,8 +29,15 @@ export class ViewMetadataPanel extends Component {
 
     return (
       <SidePanel open={this.props.open}>
-        <h1>Metadata</h1>
-        <i className="fa fa-close close-modal" onClick={this.close.bind(this)}/>
+        <div className="aside-title">
+          <h1>Metadata</h1>
+          <i className="fa fa-close close-modal" onClick={this.close.bind(this)}/>
+        </div>
+        <ul className="nav nav-tabs">
+          <li><a href="#">Table of content</a></li>
+          <li className="active"><a href="#">Metadata</a></li>
+          <li> <a href="#">Connections (22)</a></li>
+        </ul>
         {(() => {
           if (docBeingEdited) {
             return <DocumentForm onSubmit={this.submit.bind(this)} />;

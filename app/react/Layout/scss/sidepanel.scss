@@ -3,7 +3,6 @@
 @import "../../App/scss/config/_typography.scss";
 
 .side-panel {
-  $c-sidebar: darken($c-primary-lighten, 2%);
   position: fixed;
   right: 0;
   top: 60px;

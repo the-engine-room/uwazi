@@ -183,7 +183,15 @@ header {
 			margin-right: 3px;
 		}
 		a {
+      font-size: $f-size-sm;
 			color: $c-white;
 		}
+    .fa {
+      color: $c-primary-dark;
+      font-size: 18px;
+      position: relative;
+      top: 2px;
+      margin-right: 5px;
+    }
 	}
 }
