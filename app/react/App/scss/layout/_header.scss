@@ -185,13 +185,21 @@ header {
 		a {
       font-size: $f-size-sm;
 			color: $c-white;
+      background: transparent;
+      &:hover {
+        background: transparent;
+        color: $c-white;
+      }
+      .fa {
+        color: $c-primary-dark;
+        font-size: 18px;
+        position: relative;
+        top: 2px;
+        margin-right: 5px;
+      }
+      &:hover .fa {
+        color: $c-white;
+      }
 		}
-    .fa {
-      color: $c-primary-dark;
-      font-size: 18px;
-      position: relative;
-      top: 2px;
-      margin-right: 5px;
-    }
 	}
 }
