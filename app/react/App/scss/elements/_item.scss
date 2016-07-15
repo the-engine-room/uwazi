@@ -48,10 +48,13 @@
 
   &:hover{
     cursor: pointer;
-    border-bottom-color: $c-shadow-dark;
+    border-color: $c-shadow-dark;
   }
   &.is-active {
-    border-bottom-color: $c-primary;
+    border-color: $c-primary;
+    &:before {
+      border-color: $c-grey-lighten $c-grey-lighten $c-primary $c-primary;
+    }
   }
 
   .label {
