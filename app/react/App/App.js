@@ -40,7 +40,7 @@ class App extends Component {
   render() {
     let menuClass = 'col-md-5 col-sm-6';
     let menuToggleClass = 'navbar-toggle ';
-    let navClass = 'nav nav-pills col-sm-6 col-md-5';
+    let navClass = 'nav nav-pills';
 
     if (this.state.showmenu) {
       menuClass += ' in';
@@ -67,9 +67,9 @@ class App extends Component {
           <header>
             <div className="container-fluid">
               <div className="row">
-                <i className="fa fa-bars"></i>
+                <i className="fa fa-bars" onClick={this.toggleMenu.bind(this)}></i>
                 <h1><SiteName/></h1>
-                <Menu className="nav nav-pills" />
+                <Menu className={navClass} />
                 {/*<div className="col-sm-5">
                   {this.renderTools()}
                 </div>*/}
