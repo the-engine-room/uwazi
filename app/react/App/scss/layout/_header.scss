@@ -3,6 +3,10 @@ header {
 	z-index: 40;
 	position: fixed;
 	top: 0;
+  padding-right: 60px;
+  @media(min-width: 1150px) {
+    padding-right: 0;
+  }
 
 	h1 {
 		font-size: $f-size-lg;
