@@ -87,25 +87,19 @@ header {
 	}
 
 	/* menu buttons */
-	.fa-bars,
-	.fa-filter {
-		z-index: 1;
-		position: absolute;
-		top: 0;
-		width: 42px;
-		height: 42px;
-		line-height: 42px;
-		padding: 0 15px;
+	.fa-bars {
+    z-index: 1;
+    float: left;
+    width: 54px;
+    height: 54px;
+    line-height: 54px;
+    padding: 0 15px;
+    margin-left: -15px;
+    text-align: center;
+    cursor: pointer;
 		@include desktop {
 			display: none;
 		}
-	}
-	.fa-bars {
-		right: 0;
-	}
-	.fa-filter {
-		left: 0;
-		text-align: right;
 	}
 }
 
