@@ -23,7 +23,7 @@ export class LibraryMenu extends Component {
 
     return (
       <MenuButtons.Main onClick={this.props.showFilters}>
-        <i className="fa fa-filter"></i>
+        <i className="fa fa-search"></i>
       </MenuButtons.Main>
       );
   }

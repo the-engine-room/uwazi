@@ -91,6 +91,10 @@ export class FiltersForm extends Component {
             );
         })}
         </Form>
+        <div className="btn-group btn-block">
+          <button className="btn btn-default">Cancel</button>
+          <button className="btn btn-success">Search</button>
+        </div>
       </div>
     );
   }
