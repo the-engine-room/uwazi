@@ -12,6 +12,13 @@ export class UploadsMenu extends Component {
     return (
       <div className={active ? 'active' : ''}>
         {(() => {
+          if (doc) {
+            return <div className="float-btn__main cta">
+              <button type="submit" form="documentForm"><span>Save metadata</span><i className="fa fa-save"></i></button>
+            </div>;
+          }
+        })()}
+        {(() => {
           if (doc && doc.get('template')) {
             return <div className="float-btn__sec publish" onClick={() => this.props.showModal('readyToPublish', doc)}>
               <span>Publish document</span><i className="fa fa-send"></i>
@@ -29,13 +36,6 @@ export class UploadsMenu extends Component {
           if (doc) {
             return <div className="float-btn__sec delete" onClick={() => this.props.showModal('deleteDocument', doc)}>
               <span>Delete document</span><i className="fa fa-trash"></i>
-            </div>;
-          }
-        })()}
-        {(() => {
-          if (doc) {
-            return <div className="float-btn__main cta">
-              <button type="submit" form="documentForm"><span>Save metadata</span><i className="fa fa-save"></i></button>
             </div>;
           }
         })()}
