@@ -8,6 +8,7 @@ import {resetTemplate, saveTemplate, saveEntity} from 'app/Templates/actions/tem
 import PropertyOption from 'app/Templates/components/PropertyOption';
 import MetadataTemplate from 'app/Templates/components/MetadataTemplate';
 import 'app/Templates/scss/templates.scss';
+import ShowIf from 'app/App/ShowIf';
 
 export class TemplateCreator extends Component {
 
@@ -17,14 +18,16 @@ export class TemplateCreator extends Component {
 
   render() {
     let save = this.props.saveTemplate;
-    if (this.context.router.isActive('settings/entities/new')) {
+    let backUrl = '/settings/documents';
+    if (this.props.entity) {
       save = this.props.saveEntity;
+      backUrl = '/settings/entities';
     }
 
     return (
       <div className="row metadata">
         <main className="col-xs-12 col-sm-9">
-            <MetadataTemplate saveTemplate={save} />
+            <MetadataTemplate saveTemplate={save} backUrl={backUrl} />
         </main>
         <aside className="col-xs-12 col-sm-3">
           <div className="metadataTemplate-constructor panel panel-default">
@@ -32,7 +35,18 @@ export class TemplateCreator extends Component {
             <ul className="list-group">
               <PropertyOption label='Text' type='text'/>
               <PropertyOption label='Select' type='select'/>
+              <PropertyOption label='Multi Select' type='multiselect'/>
               <PropertyOption label='Date' type='date'/>
+              <PropertyOption label='Rich Text' type='markdown'/>
+              <ShowIf if={this.props.settings.collection.toJS().project === 'cejil'}>
+                <PropertyOption label='Violated articles' type='nested'/>
+              </ShowIf>
+              <ShowIf if={this.props.settings.collection.toJS().project === 'cejil'}>
+                <PropertyOption label='Multi Date' type='multidate'/>
+              </ShowIf>
+              <ShowIf if={this.props.settings.collection.toJS().project === 'cejil'}>
+                <PropertyOption label='Multi Date Range' type='multidaterange'/>
+              </ShowIf>
             </ul>
           </div>
         </aside>
@@ -44,7 +58,9 @@ export class TemplateCreator extends Component {
 TemplateCreator.propTypes = {
   resetTemplate: PropTypes.func,
   saveTemplate: PropTypes.func,
-  saveEntity: PropTypes.func
+  saveEntity: PropTypes.func,
+  entity: PropTypes.bool,
+  settings: PropTypes.object
 };
 
 TemplateCreator.contextTypes = {
@@ -55,6 +71,12 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators({resetTemplate, saveTemplate, saveEntity}, dispatch);
 }
 
+const mapStateToProps = (state) => {
+  return {
+    settings: state.settings
+  };
+};
+
 export default DragDropContext(HTML5Backend)(
-  connect(null, mapDispatchToProps)(TemplateCreator)
+  connect(mapStateToProps, mapDispatchToProps)(TemplateCreator)
 );

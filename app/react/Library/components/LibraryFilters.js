@@ -2,53 +2,35 @@ import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
-import {filterDocumentType, filterAllDocumentTypes, resetFilters} from 'app/Library/actions/filterActions';
-import {searchDocuments} from 'app/Library/actions/libraryActions';
-import {hideFilters} from 'app/Library/actions/libraryActions';
+import {resetFilters} from 'app/Library/actions/filterActions';
 import FiltersForm from 'app/Library/components/FiltersForm';
+import DocumentTypesList from 'app/Library/components/DocumentTypesList';
 import SidePanel from 'app/Layout/SidePanel';
+import {t} from 'app/I18N';
 
 export class LibraryFilters extends Component {
 
-  componentWillMount() {
-    this.docTypes = [];
-  }
-
-  handleFilterDocType(e) {
-    this.props.filterDocumentType(e.target.id);
-  }
-
-  handleFilterAllDocuments() {
-    this.props.filterAllDocumentTypes(!this.props.allDocumentTypes);
+  constructor(props) {
+    super(props);
   }
 
   render() {
     return (
       <SidePanel open={this.props.open}>
-        <div className="sidepanel-header">
-          <h1>Filters<small> <span onClick={this.props.resetFilters}><i className="fa fa-refresh"></i><span>Reset filters</span></span></small></h1>
+        <div className="sidepanel-footer">
+          <span onClick={this.props.resetFilters} className="btn btn-primary">
+            <i className="fa fa-refresh"></i>
+            <span className="btn-label">{t('System', 'Reset')}</span>
+          </span>
+          <button type="submit" form="filtersForm" className="btn btn-success">
+            <i className="fa fa-search"></i>
+            <span className="btn-label">{t('System', 'Search')}</span>
+          </button>
         </div>
         <div className="sidepanel-body">
-          <ul className="search__filter search__filter--type">
-            <li>Document type</li>
-            <li>
-              <input
-                onClick={this.handleFilterAllDocuments.bind(this)}
-                id="all-documents"
-                type="checkbox"
-                checked={this.props.allDocumentTypes}/>
-              <label htmlFor="all-documents">&nbsp;Select all</label>
-            </li>
-            {this.props.templates.map((template, index) => {
-              return <li key={index}>
-                <input onChange={this.handleFilterDocType.bind(this)}
-                  id={template._id}
-                  type="checkbox"
-                  checked={this.props.documentTypes[template._id]}/>
-                <label htmlFor={template._id}>&nbsp;{template.name}</label>
-              </li>;
-            })}
-          </ul>
+          <div className="documentTypes-selector">
+            <DocumentTypesList />
+          </div>
           <FiltersForm />
         </div>
       </SidePanel>
@@ -57,28 +39,18 @@ export class LibraryFilters extends Component {
 }
 
 LibraryFilters.propTypes = {
-  templates: PropTypes.array,
-  thesauris: PropTypes.array,
-  allDocumentTypes: PropTypes.bool,
-  documentTypes: PropTypes.object,
-  filterDocumentType: PropTypes.func,
-  filterAllDocumentTypes: PropTypes.func,
   resetFilters: PropTypes.func,
-  hideFilters: PropTypes.func,
-  searchDocuments: PropTypes.func,
-  searchTerm: PropTypes.string,
   open: PropTypes.bool
 };
 
-export function mapStateToProps(state) {
-  let props = state.library.filters.toJS();
-  props.searchTerm = state.library.ui.toJS().searchTerm;
-  props.open = state.library.ui.get('filtersPanel') && !state.library.ui.get('selectedDocument');
-  return props;
+export function mapStateToProps({library}) {
+  return {
+    open: library.ui.get('filtersPanel') && !library.ui.get('selectedDocument')
+  };
 }
 
 function mapDispatchToProps(dispatch) {
-  return bindActionCreators({filterDocumentType, filterAllDocumentTypes, searchDocuments, hideFilters, resetFilters}, dispatch);
+  return bindActionCreators({resetFilters}, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(LibraryFilters);

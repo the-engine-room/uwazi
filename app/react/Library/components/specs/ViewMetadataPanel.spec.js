@@ -2,7 +2,7 @@ import React from 'react';
 import {shallow} from 'enzyme';
 import configureMockStore from 'redux-mock-store';
 import Immutable from 'immutable';
-import documents from 'app/Documents';
+import {formater} from 'app/Metadata';
 
 import PanelContainer, {ViewMetadataPanel} from '../ViewMetadataPanel';
 import SidePanel from 'app/Layout/SidePanel';
@@ -15,10 +15,10 @@ describe('ViewMetadataPanel', () => {
     props = {
       metadata: {metadata: []},
       metadataForm: {},
+      rawDoc: Immutable.fromJS({}),
       unselectDocument: jasmine.createSpy('unselectDocument'),
       resetForm: jasmine.createSpy('resetForm'),
-      showModal: jasmine.createSpy('showModal'),
-      formState: {}
+      showModal: jasmine.createSpy('showModal')
     };
   });
 
@@ -45,16 +45,16 @@ describe('ViewMetadataPanel', () => {
   describe('on close', () => {
     it('should should unselectDocument', () => {
       render();
-      component.find('i').simulate('click');
+      component.find('i.close-modal').simulate('click');
       expect(props.unselectDocument).toHaveBeenCalled();
       expect(props.resetForm).toHaveBeenCalledWith('library.metadata');
     });
 
     describe('when the form is dirty', () => {
       it('should open the confirmation modal', () => {
+        props.formDirty = true;
         render();
-        props.formState.dirty = true;
-        component.find('i').simulate('click');
+        component.find('i.close-modal').simulate('click');
         expect(props.showModal).toHaveBeenCalledWith('ConfirmCloseForm', props.metadata);
       });
     });
@@ -68,24 +68,26 @@ describe('ViewMetadataPanel', () => {
         }),
         metadata: {},
         metadataForm: {},
-        filters: Immutable.fromJS({templates: ['templates'], thesauris: ['thesauris']})
-      }
+        filters: Immutable.fromJS({})
+      },
+      templates: Immutable.fromJS(['templates']),
+      thesauris: Immutable.fromJS(['thesauris'])
     };
 
     const mockStore = configureMockStore([]);
 
     let renderContainer = () => {
-      spyOn(documents.helpers, 'prepareMetadata');
+      spyOn(formater, 'prepareMetadata');
       let store = mockStore(state);
       component = shallow(<PanelContainer />, {context: {store}});
     };
 
     it('should prepare doc with template and thesauris', () => {
       renderContainer();
-      expect(documents.helpers.prepareMetadata).toHaveBeenCalledWith(
+      expect(formater.prepareMetadata).toHaveBeenCalledWith(
         state.library.ui.get('selectedDocument').toJS(),
-        state.library.filters.get('templates').toJS(),
-        state.library.filters.get('thesauris').toJS()
+        ['templates'],
+        ['thesauris']
       );
     });
 

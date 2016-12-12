@@ -43,7 +43,7 @@ describe('search', () => {
   describe('getUploadsByUser', () => {
     it('should request all unpublished entities or documents for the user', (done) => {
       let user = {_id: 'c08ef2532f0bd008ac5174b45e033c94'};
-      search.getUploadsByUser(user)
+      search.getUploadsByUser(user, 'es')
       .then((response) => {
         expect(response.rows.length).toBe(1);
         expect(response.rows[0].title).toBe('unpublished');
@@ -62,12 +62,13 @@ describe('search', () => {
         filters: {property1: 'value1', property2: 'value2'},
         fields: ['field'],
         types: ['ruling']
-      })
+      }, 'es')
       .then((results) => {
         let expectedQuery = queryBuilder()
         .fullTextSearch('searchTerm', ['field'])
         .filterMetadata({property1: 'value1', property2: 'value2'})
         .filterByTemplate(['ruling'])
+        .language('es')
         .query();
 
         expect(elastic.search).toHaveBeenCalledWith({index: 'uwazi', body: expectedQuery});
@@ -85,12 +86,13 @@ describe('search', () => {
         sort: 'title',
         order: 'asc',
         types: ['ruling']
-      })
+      }, 'es')
       .then((results) => {
         let expectedQuery = queryBuilder()
         .fullTextSearch('searchTerm')
         .filterMetadata({property1: 'value1', property2: 'value2'})
         .filterByTemplate(['ruling'])
+        .language('es')
         .sort('title', 'asc').query();
 
         expect(elastic.search).toHaveBeenCalledWith({index: 'uwazi', body: expectedQuery});
@@ -110,40 +112,14 @@ describe('search', () => {
       .toObject();
       spyOn(elastic, 'search').and.returnValue(new Promise((resolve) => resolve(result)));
 
-      search.matchTitle('term')
+      search.matchTitle('term', 'es')
       .then((results) => {
-        let query = queryBuilder().fullTextSearch('term', ['doc.title']).highlight(['doc.title']).limit(5).query();
+        let query = queryBuilder().fullTextSearch('term', ['doc.title']).highlight(['doc.title']).language('es').limit(5).query();
         expect(elastic.search).toHaveBeenCalledWith({index: 'uwazi', body: query});
         expect(results).toEqual([{_id: 'id1', title: 'doc1 highlighted'}, {_id: 'id2', title: 'doc2 highlighted'}]);
         done();
       })
       .catch(done.fail);
-    });
-  });
-
-  describe('list', () => {
-    it('should return a list of documents and entities with the title', (done) => {
-      search.list()
-      .then((results) => {
-        expect(results.rows.length).toBe(7);
-        expect(results.rows[0].title).toBe('Batman finishes');
-        done();
-      })
-      .catch(done.fail);
-    });
-
-    describe('when giving a list of keys', () => {
-      it('should return only those search', (done) => {
-        search.list(['8202c463d6158af8065022d9b5014ccb', 'd0298a48d1221c5ceb53c4879301507f'])
-        .then((results) => {
-          expect(results.rows.length).toBe(2);
-          expect(results.rows[0].title).toBe('Penguin almost done');
-          done();
-        })
-        .catch(() => {
-          done();
-        });
-      });
     });
   });
 });

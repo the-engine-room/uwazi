@@ -3,10 +3,10 @@ import React, {Component, PropTypes} from 'react';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'font-awesome/css/font-awesome.css';
+import 'react-widgets/lib/scss/react-widgets.scss';
 import './scss/styles.scss';
 import './scss/fixes.scss';
 
-import Helmet from 'react-helmet';
 import Notifications from 'app/Notifications';
 import Menu from './Menu';
 import SiteName from './SiteName';
@@ -52,7 +52,7 @@ class App extends Component {
     let searchBoxClass = 'search-box';
     let menuToggleClass = 'navbar-toggle ';
     let MenuButtonClass = 'menu-button fa fa-bars';
-    let navClass = 'nav nav-pills';
+    let navClass = 'menuNav';
 
     if (this.state.showmenu) {
       searchBoxClass += ' in';
@@ -63,27 +63,16 @@ class App extends Component {
 
     return (
       <div id="app">
-        <Helmet
-          titleTemplate='Uwazi - %s'
-          meta={[
-            {'char-set': 'utf-8'},
-            {name: 'description', content: 'Uwazi docs'}
-          ]}
-        />
         <Notifications />
         <div className="content">
           <nav>
             <h1><SiteName/></h1>
           </nav>
           <header>
-            <div className="container-fluid">
-              <div className="row">
-                <h1 className="logotype"><SiteName/></h1>
-                <i className={MenuButtonClass} onClick={this.toggleMenu.bind(this)}></i>
-                {this.renderTools()}
-                <Menu onClick={this.toggleMenu.bind(this)} className={navClass} />
-              </div>
-            </div>
+            <i className={MenuButtonClass} onClick={this.toggleMenu.bind(this)}></i>
+            <h1 className="logotype"><SiteName/></h1>
+            {this.renderTools()}
+            <Menu location={this.props.location} onClick={this.toggleMenu.bind(this)} className={navClass} />
           </header>
           <div className="app-content container-fluid">
             <Confirm {...this.state.confirmOptions}/>
@@ -97,11 +86,13 @@ class App extends Component {
 
 App.propTypes = {
   fetch: PropTypes.func,
-  children: PropTypes.object
+  children: PropTypes.object,
+  location: PropTypes.object
 };
 
 App.childContextTypes = {
-  confirm: PropTypes.func
+  confirm: PropTypes.func,
+  locale: PropTypes.string
 };
 
 App.contextTypes = {

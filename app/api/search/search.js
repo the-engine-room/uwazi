@@ -3,14 +3,14 @@ import {index as elasticIndex} from 'api/config/elasticIndexes';
 import elastic from './elastic';
 import queryBuilder from './documentQueryBuilder';
 import request from 'shared/JSONRequest';
-import sanitizeResponse from '../utils/sanitizeResponse';
 
 export default {
-  search(query) {
+  search(query, language) {
     let documentsQuery = queryBuilder()
     .fullTextSearch(query.searchTerm, query.fields)
     .filterMetadata(query.filters)
-    .filterByTemplate(query.types);
+    .filterByTemplate(query.types)
+    .language(language);
 
     if (query.sort) {
       documentsQuery.sort(query.sort, query.order);
@@ -24,6 +24,10 @@ export default {
       documentsQuery.limit(query.limit);
     }
 
+    if (query.aggregations) {
+      documentsQuery.aggregations(query.aggregations);
+    }
+
     return elastic.search({index: elasticIndex, body: documentsQuery.query()})
     .then((response) => {
       let rows = response.hits.hits.map((hit) => {
@@ -32,23 +36,29 @@ export default {
         return result;
       });
 
-      return {rows, totalRows: response.hits.total};
+      return {rows, totalRows: response.hits.total, aggregations: response.aggregations};
     })
     .catch(console.log);
   },
 
-  getUploadsByUser(user) {
-    let url = `${dbURL}/_design/search/_view/uploads?key="${user._id}"&descending=true`;
+  getUploadsByUser(user, language) {
+    let url = `${dbURL}/_design/search/_view/uploads`;
 
-    return request.get(url)
+    return request.get(url, {key: [user._id, language]})
     .then(response => {
       response.json.rows = response.json.rows.map(row => row.value).sort((a, b) => b.creationDate - a.creationDate);
       return response.json;
     });
   },
 
-  matchTitle(searchTerm) {
-    let query = queryBuilder().fullTextSearch(searchTerm, ['doc.title']).highlight(['doc.title']).limit(5).query();
+  matchTitle(searchTerm, language) {
+    let query = queryBuilder()
+    .fullTextSearch(searchTerm, ['doc.title'])
+    .highlight(['doc.title'])
+    .language(language)
+    .limit(5)
+    .query();
+
     return elastic.search({index: elasticIndex, body: query})
     .then((response) => {
       return response.hits.hits.map((hit) => {
@@ -67,17 +77,6 @@ export default {
         return 0;
       }
       return response.json.rows[0].value;
-    });
-  },
-
-  list(keys) {
-    let url = `${dbURL}/_design/search/_view/list`;
-    if (keys) {
-      url += `?keys=${JSON.stringify(keys)}`;
-    }
-    return request.get(url)
-    .then((response) => {
-      return sanitizeResponse(response.json);
     });
   }
 };

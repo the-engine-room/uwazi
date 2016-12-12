@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {Link} from 'react-router';
+import {I18NLink} from 'app/I18N';
 
 import {newEntity} from 'app/Uploads/actions/uploadsActions';
 import ShowIf from 'app/App/ShowIf';
@@ -13,12 +13,13 @@ export class UploadsMenu extends Component {
   deleteDocument() {
     this.context.confirm({
       accept: () => {
+        this.props.finishEdit();
         if (this.props.metadataBeingEdited.type === 'document') {
           this.props.deleteDocument(this.props.metadataBeingEdited);
+          return;
         }
 
         this.props.deleteEntity(this.props.metadataBeingEdited);
-        this.props.finishEdit();
       },
       title: 'Confirm delete',
       message: `Are you sure you want to delete: ${this.props.metadataBeingEdited.title}?`
@@ -43,40 +44,40 @@ export class UploadsMenu extends Component {
 
   renderMetadataMenu(metadataBeingEdited) {
     return <div>
-            <ShowIf if={!!metadataBeingEdited.template}>
-                <div className="float-btn__sec publish" onClick={() => this.publish()}>
-                  <span>Publish</span><i className="fa fa-send"></i>
-                </div>
-            </ShowIf>
-            <ShowIf if={!!metadataBeingEdited.processed && metadataBeingEdited.type === 'document'}>
-              <div className="float-btn__sec view">
-                <Link to={`document/${metadataBeingEdited._id}`}><span>View</span><i className="fa fa-file-o"></i></Link>
-              </div>
-            </ShowIf>
-            <ShowIf if={!!metadataBeingEdited._id && metadataBeingEdited.type === 'entity'}>
-              <div className="float-btn__sec view">
-                <Link to={`entity/${metadataBeingEdited._id}`}><span>View</span><i className="fa fa-file-o"></i></Link>
-              </div>
-            </ShowIf>
-            <ShowIf if={!!metadataBeingEdited._id}>
-              <div className="float-btn__sec delete" onClick={() => this.deleteDocument()}>
-                <span>Delete</span><i className="fa fa-trash"></i>
-              </div>
-            </ShowIf>
-            <div className="float-btn__main cta">
-              <button type="submit" form="metadataForm"><span>Save</span><i className="fa fa-save"></i></button>
-            </div>
-          </div>;
+      <ShowIf if={!!metadataBeingEdited.template}>
+        <div className="float-btn__sec publish" onClick={() => this.publish()}>
+          <span>Publish</span><i className="fa fa-send"></i>
+        </div>
+      </ShowIf>
+      <ShowIf if={!!metadataBeingEdited.processed && metadataBeingEdited.type === 'document'}>
+        <div className="float-btn__sec view">
+          <I18NLink to={`document/${metadataBeingEdited._id}`}><span>View</span><i className="fa fa-file-o"></i></I18NLink>
+        </div>
+      </ShowIf>
+      <ShowIf if={!!metadataBeingEdited._id && metadataBeingEdited.type === 'entity'}>
+        <div className="float-btn__sec view">
+          <I18NLink to={`entity/${metadataBeingEdited._id}`}><span>View</span><i className="fa fa-file-o"></i></I18NLink>
+        </div>
+      </ShowIf>
+      <ShowIf if={!!metadataBeingEdited._id}>
+        <div className="float-btn__sec delete" onClick={() => this.deleteDocument()}>
+          <span>Delete</span><i className="fa fa-trash"></i>
+        </div>
+      </ShowIf>
+      <div className="float-btn__main cta">
+        <button type="submit" form="metadataForm"><span>Save</span><i className="fa fa-save"></i></button>
+      </div>
+    </div>;
   }
 
   renderNormalMenu() {
     return <div>
-            <div className="float-btn__main cta">
-              <button onClick={this.props.newEntity.bind(null, this.props.templates.toJS().filter((template) => template.isEntity))}>
-                <span>New Entity</span><i className="fa fa-plus"></i>
-              </button>
-            </div>
-           </div>;
+      <div className="float-btn__main cta">
+        <button onClick={this.props.newEntity.bind(null, this.props.templates.toJS().filter((template) => template.isEntity))}>
+          <span>New Entity</span><i className="fa fa-plus"></i>
+        </button>
+      </div>
+    </div>;
   }
 
   render() {
@@ -109,7 +110,7 @@ function mapStateToProps(state) {
   return {
     documentBeingEdited: docId,
     metadataBeingEdited: state.uploads.uiState.get('metadataBeingEdited'),
-    templates: state.uploads.templates
+    templates: state.templates
   };
 }
 

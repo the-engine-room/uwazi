@@ -3,6 +3,7 @@ import database from '../../utils/database.js';
 import fixtures from './fixtures.js';
 import {db_url as dbUrl} from '../../config/database.js';
 import request from '../../../shared/JSONRequest';
+import translations from 'api/i18n/translations';
 
 describe('thesauris', () => {
   beforeEach((done) => {
@@ -13,6 +14,40 @@ describe('thesauris', () => {
   });
 
   describe('get()', () => {
+    it('should return all thesauris by default', (done) => {
+      thesauris.get(null, 'es')
+      .then((response) => {
+        let docs = response.rows;
+        expect(docs[0].name).toBe('secret recipes');
+        done();
+      })
+      .catch(done.fail);
+    });
+
+    it('should also return entity templates with the entitties as options', (done) => {
+      thesauris.get(null, 'es')
+      .then((response) => {
+        let docs = response.rows;
+        expect(docs[2].name).toBe('Judge');
+        expect(docs[2].values).toEqual([{id: 'sharedId', label: 'Dredd', icon: 'Icon'}]);
+        done();
+      })
+      .catch(done.fail);
+    });
+
+    describe('when passing id', () => {
+      it('should return matching thesauri', (done) => {
+        thesauris.get('c08ef2532f0bd008ac5174b45e033c94')
+        .then((response) => {
+          expect(response.rows[0].name).toBe('Top 2 scify books');
+          done();
+        })
+        .catch(done.fail);
+      });
+    });
+  });
+
+  describe('dictionaries()', () => {
     it('should return all thesauris by default', (done) => {
       thesauris.get()
       .then((response) => {
@@ -47,8 +82,22 @@ describe('thesauris', () => {
       })
       .then((response) => {
         let docs = response.json.rows;
-        expect(docs.length).toBe(1);
+        expect(docs.length).toBe(2);
         expect(docs[0].value.name).toBe('Top 2 scify books');
+        done();
+      })
+      .catch(done.fail);
+    });
+
+    it('should delete the translation', (done) => {
+      request.get(dbUrl + '/c08ef2532f0bd008ac5174b45e033c93')
+      .then(thesauri => {
+        spyOn(translations, 'deleteContext');
+        return thesauris.delete(thesauri.json._id, thesauri.json._rev);
+      })
+      .then((response) => {
+        expect(response.ok).toBe(true);
+        expect(translations.deleteContext).toHaveBeenCalledWith('c08ef2532f0bd008ac5174b45e033c93');
         done();
       })
       .catch(done.fail);
@@ -68,7 +117,7 @@ describe('thesauris', () => {
 
   describe('save', () => {
     it('should create a thesauri', (done) => {
-      let data = {name: 'Batman wish list', values: [{id: 1, label: 'Joker BFF'}]};
+      let data = {name: 'Batman wish list', values: [{id: '1', label: 'Joker BFF'}]};
       let postResponse;
 
       thesauris.save(data)
@@ -81,8 +130,23 @@ describe('thesauris', () => {
           return thesauri.value.name === 'Batman wish list';
         });
 
-        expect(newDoc.value.values).toEqual([{id: 1, label: 'Joker BFF'}]);
+        expect(newDoc.value.values).toEqual([{id: '1', label: 'Joker BFF'}]);
         expect(newDoc.value._rev).toBe(postResponse.rev);
+        done();
+      })
+      .catch(done.fail);
+    });
+
+    it('should create a translation context', (done) => {
+      let data = {name: 'Batman wish list', values: [{id: '1', label: 'Joker BFF'}]};
+      spyOn(translations, 'addContext');
+      thesauris.save(data)
+      .then((response) => {
+        expect(translations.addContext)
+        .toHaveBeenCalledWith(response.id, 'Batman wish list', {
+          'Batman wish list': 'Batman wish list',
+          'Joker BFF': 'Joker BFF'
+        });
         done();
       })
       .catch(done.fail);
@@ -110,35 +174,6 @@ describe('thesauris', () => {
       .catch(done.fail);
     });
 
-    it('should set a unique id for each value when missing', (done) => {
-      let data = {name: 'Enigma questions', values: [
-        {id: 1, label: 'A fly without wings is a walk?'},
-        {id: 3, label: 'Wait for a waiter makes you a waiter?'},
-        {label: 'If you have one eye, you blink or wink?'},
-        {id: 8, label: 'Is there another word for synonym?'},
-        {label: 'If you shouldnt talk to strangers, how you make friends?'}
-      ]};
-      let postResponse;
-
-      thesauris.save(data)
-      .then((response) => {
-        postResponse = response;
-        return request.get(dbUrl + '/_design/thesauris/_view/all');
-      })
-      .then((response) => {
-        let newDoc = response.json.rows.find((template) => {
-          return template.value.name === 'Enigma questions';
-        });
-
-        expect(newDoc.value.name).toBe('Enigma questions');
-        expect(newDoc.value.values[2].id).toEqual(9);
-        expect(newDoc.value.values[4].id).toEqual(10);
-        expect(newDoc.value._rev).toBe(postResponse.rev);
-        done();
-      })
-      .catch(done.fail);
-    });
-
     describe('when passing _id and _rev', () => {
       it('edit an existing one', (done) => {
         request.get(dbUrl + '/c08ef2532f0bd008ac5174b45e033c94')
@@ -153,6 +188,35 @@ describe('thesauris', () => {
         .then((response) => {
           let template = response.json;
           expect(template.name).toBe('changed name');
+          done();
+        })
+        .catch(done.fail);
+      });
+
+      it('should update the translation', (done) => {
+        request.get(dbUrl + '/c08ef2532f0bd008ac5174b45e033c94')
+        .then((response) => {
+          let template = response.json;
+          let data = {
+            _id: template._id,
+            _rev: template._rev,
+            name: 'Top 1 games',
+            values: [
+              {id: '1', label: 'Marios game'}
+            ]
+          };
+          spyOn(translations, 'updateContext');
+          return thesauris.save(data);
+        })
+        .then((response) => {
+          expect(translations.updateContext)
+          .toHaveBeenCalledWith(
+            response.id,
+            'Top 1 games',
+            {'Enders game': 'Marios game', 'Top 2 scify books': 'Top 1 games'},
+            ['Fundation'],
+            {'Top 1 games': 'Top 1 games', 'Marios game': 'Marios game'}
+          );
           done();
         })
         .catch(done.fail);

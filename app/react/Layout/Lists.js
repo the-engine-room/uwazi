@@ -5,7 +5,7 @@ let List = ({children}) => {
 };
 
 let ItemName = ({children}) => {
-  return <div className="item-name">{children}</div>;
+  return <div className="item-name"><span>{children}</span></div>;
 };
 
 let ItemFooter = ({children, onClick}) => {
@@ -20,7 +20,7 @@ let ProgressBar = ({progress}) => {
     icon = 'fa fa-clock-o';
   }
   return (
-    <div>
+    <div className="label-progress">
       <span className="label label-info">
         <i className={icon}></i>&nbsp;
         <span>{message}</span>
@@ -58,7 +58,7 @@ let RowList = ({children}) => {
   return <div className="item-group">{children}</div>;
 };
 
-let RowListItem = ({children, status, onClick, active}) => {
+let RowListItem = ({children, status, onClick, onMouseEnter, onMouseLeave, active, className}) => {
   let activeClass = '';
   if (active === true) {
     activeClass = 'is-active';
@@ -68,11 +68,15 @@ let RowListItem = ({children, status, onClick, active}) => {
   }
 
   return (
-    <div className={'item item-status item-' + (status || 'default') + ' ' + activeClass} onClick={onClick}>
+    <div className={className + ' item item-status item-' + (status || 'default') + ' ' + activeClass}
+         onClick={onClick}
+         onMouseEnter={onMouseEnter}
+         onMouseLeave={onMouseLeave}>
       {children}
     </div>
   );
 };
+
 RowList.Item = RowListItem;
 
 let childrenType = PropTypes.oneOfType([
@@ -83,7 +87,15 @@ let childrenType = PropTypes.oneOfType([
 
 List.propTypes = {children: childrenType};
 RowList.propTypes = {children: childrenType};
-RowListItem.propTypes = {children: childrenType, status: PropTypes.string, onClick: PropTypes.func, active: PropTypes.bool};
+RowListItem.propTypes = {
+  children: childrenType,
+  status: PropTypes.string,
+  onClick: PropTypes.func,
+  onMouseEnter: PropTypes.func,
+  onMouseLeave: PropTypes.func,
+  active: PropTypes.bool,
+  className: PropTypes.string
+};
 ItemFooter.propTypes = {children: childrenType, onClick: PropTypes.func};
 ItemLabel.propTypes = {children: childrenType, status: PropTypes.string};
 ItemName.propTypes = {children: childrenType};

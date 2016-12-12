@@ -1,6 +1,6 @@
 import 'isomorphic-fetch';
 
-function toParams(_data) {
+export function toUrlParams(_data) {
   let data = Object.assign({}, _data);
   if (!data || Object.keys(data).length === 0) {
     return '';
@@ -18,16 +18,18 @@ function toParams(_data) {
   }, []).join('&');
 }
 
-let _fetch = (url, data, method, cookie) => {
+let _fetch = (url, data, method, _headers) => {
   let response;
   let params = '';
   let body;
 
-  let headers = {Accept: 'application/json', 'Content-Type': 'application/json'};
-  headers.Cookie = cookie;
+  let headers = Object.assign({
+    Accept: 'application/json',
+    'Content-Type': 'application/json'
+  }, _headers);
 
   if (method === 'GET' || method === 'DELETE') {
-    params = toParams(data);
+    params = toUrlParams(data);
   }
 
   if (method === 'POST') {
@@ -59,12 +61,12 @@ let _fetch = (url, data, method, cookie) => {
 };
 
 export default {
-  post: (url, data) => {
-    return _fetch(url, data, 'POST');
+  post: (url, data, headers) => {
+    return _fetch(url, data, 'POST', headers);
   },
 
-  get: (url, data, cookie) => {
-    return _fetch(url, data, 'GET', cookie);
+  get: (url, data, headers) => {
+    return _fetch(url, data, 'GET', headers);
   },
 
   delete: (url, data) => {

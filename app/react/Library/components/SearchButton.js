@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
+import {t} from 'app/I18N';
 
 import {showFilters, hideFilters} from 'app/Library/actions/libraryActions';
 import {unselectDocument} from '../actions/libraryActions';
@@ -24,8 +25,13 @@ export class SearchButton extends Component {
 
     return (
       <a href='#' className={'search-button btn ' + activeClass} onClick={toggle}>
-        <i className="fa fa-search"></i>
-        <i className="fa fa-chevron-right"></i>
+        <div className="searchButton-open">
+          <i className="fa fa-search"></i>
+          <span>{t('System', 'Search')}...</span>
+        </div>
+        <div className="searchButton-close">
+          <i className="fa fa-chevron-right"></i>
+        </div>
       </a>
     );
   }
@@ -42,7 +48,7 @@ SearchButton.propTypes = {
 export function mapStateToProps(state) {
   return {
     open: state.library.ui.get('filtersPanel'),
-    metadataPanelIsOpen: state.library.ui.get('selectedDocument')
+    metadataPanelIsOpen: !!state.library.ui.get('selectedDocument')
   };
 }
 

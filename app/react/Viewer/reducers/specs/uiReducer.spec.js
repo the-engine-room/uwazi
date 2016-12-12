@@ -3,14 +3,31 @@ import 'jasmine-immutablejs-matchers';
 
 import uiReducer from 'app/Viewer/reducers/uiReducer';
 import * as types from 'app/Viewer/actions/actionTypes';
+import * as actions from 'app/Viewer/actions/uiActions';
 
-describe('documentReducer', () => {
+describe('Viewer uiReducer', () => {
   describe('when state is undefined', () => {
     it('return initial state', () => {
       let newState = uiReducer();
 
       expect(newState).toBeImmutable();
       expect(newState.toJS()).toEqual({reference: {}});
+    });
+  });
+
+  describe('setGoToActive', () => {
+    it('should set goToActive to true by default', () => {
+      let newState = uiReducer(Immutable.fromJS({}), actions.goToActive());
+      let expected = Immutable.fromJS({goToActive: true});
+
+      expect(newState).toEqualImmutable(expected);
+    });
+
+    it('should set goToActive to value passed', () => {
+      let newState = uiReducer(Immutable.fromJS({}), actions.goToActive(false));
+      let expected = Immutable.fromJS({goToActive: false});
+
+      expect(newState).toEqualImmutable(expected);
     });
   });
 
@@ -32,6 +49,15 @@ describe('documentReducer', () => {
     });
   });
 
+  describe('showTab()', () => {
+    it('should set tab connections', () => {
+      let newState = uiReducer(Immutable.fromJS({}), actions.showTab('connections'));
+      let expected = Immutable.fromJS({tab: 'connections'});
+
+      expect(newState).toEqualImmutable(expected);
+    });
+  });
+
   describe('viewer/targetDocHTML/SET', () => {
     it('should set panel to false', () => {
       let newState = uiReducer(Immutable.fromJS({panel: 'apanel'}), {type: 'viewer/targetDocHTML/SET'});
@@ -45,15 +71,6 @@ describe('documentReducer', () => {
     it('should set reference to {}', () => {
       let newState = uiReducer(Immutable.fromJS({reference: 'current'}), {type: types.RESET_REFERENCE_CREATION});
       let expected = Immutable.fromJS({reference: {}});
-
-      expect(newState).toEqualImmutable(expected);
-    });
-  });
-
-  describe('VIEWER_SEARCHING', () => {
-    it('should set viewerSearching = true', () => {
-      let newState = uiReducer(Immutable.fromJS({}), {type: types.VIEWER_SEARCHING});
-      let expected = Immutable.fromJS({viewerSearching: true});
 
       expect(newState).toEqualImmutable(expected);
     });
@@ -92,15 +109,6 @@ describe('documentReducer', () => {
     it('should set targetDocument = id passed', () => {
       let newState = uiReducer(Immutable.fromJS({reference: {}}), {type: types.SELECT_TARGET_DOCUMENT, id: 'id'});
       let expected = Immutable.fromJS({reference: {targetDocument: 'id'}});
-
-      expect(newState).toEqualImmutable(expected);
-    });
-  });
-
-  describe('SET_RELATION_TYPE', () => {
-    it('should set sourceRange passed', () => {
-      let newState = uiReducer(Immutable.fromJS({}), {type: types.SET_RELATION_TYPE, relationType: 'type'});
-      let expected = Immutable.fromJS({reference: {relationType: 'type'}});
 
       expect(newState).toEqualImmutable(expected);
     });
@@ -155,11 +163,11 @@ describe('documentReducer', () => {
     });
   });
 
-  describe('ADD_CREATED_REFERENCE', () => {
+  describe('ADD_REFERENCE', () => {
     it('should set reference = {} and panel=false', () => {
       let newState = uiReducer(Immutable.fromJS(
         {panel: 'panel', reference: {sourceRange: 'sourceRange'}}
-      ), {type: types.ADD_CREATED_REFERENCE});
+      ), {type: types.ADD_REFERENCE});
       let expected = Immutable.fromJS({panel: false, reference: {}});
 
       expect(newState).toEqualImmutable(expected);

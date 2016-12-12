@@ -3,8 +3,9 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import {RowList, ItemFooter, ItemName} from 'app/Layout/Lists';
 import {edit, finishEdit, publishEntity} from 'app/Uploads/actions/uploadsActions';
-import {Link} from 'react-router';
-import entities from 'app/Entities';
+import {I18NLink} from 'app/I18N';
+import {actions} from 'app/Metadata';
+import {TemplateLabel, Icon} from 'app/Layout';
 
 export class UploadEntity extends Component {
   publish(e) {
@@ -24,7 +25,7 @@ export class UploadEntity extends Component {
       return this.props.finishEdit();
     }
 
-    this.props.loadEntity('uploads.metadata', entity, this.props.templates.toJS());
+    this.props.loadInReduxForm('uploads.metadata', entity, this.props.templates.toJS());
     this.props.edit(entity);
   }
 
@@ -38,13 +39,19 @@ export class UploadEntity extends Component {
     return (
       <RowList.Item status="success" active={active} onClick={this.edit.bind(this, entity, active)}>
       <div className="item-info">
+        <Icon className="item-icon item-icon-center" data={entity.icon} />
         <ItemName>{entity.title}</ItemName>
       </div>
       <ItemFooter onClick={this.publish.bind(this)}>
-        <ItemFooter.Label status="success">Ready to publish</ItemFooter.Label>
-        <Link to={`/entity/${entity._id}`} className="item-shortcut" onClick={(e) => e.stopPropagation()}>
-          <i className="fa fa-file-o"></i><span>View</span><i className="fa fa-angle-right"></i>
-        </Link>
+        <div className="item-label-group">
+          <TemplateLabel template={entity.template}/>
+          <ItemFooter.Label status="success">Ready to publish</ItemFooter.Label>
+        </div>
+        <div className="item-shortcut-group">
+          <I18NLink to={`/entity/${entity.sharedId}`} className="item-shortcut" onClick={(e) => e.stopPropagation()}>
+            <i className="fa fa-file-text-o"></i>
+          </I18NLink>
+        </div>
       </ItemFooter>
     </RowList.Item>
     );
@@ -54,7 +61,7 @@ export class UploadEntity extends Component {
 UploadEntity.propTypes = {
   entity: PropTypes.object,
   metadataBeingEdited: PropTypes.object,
-  loadEntity: PropTypes.func,
+  loadInReduxForm: PropTypes.func,
   finishEdit: PropTypes.func,
   templates: PropTypes.object,
   edit: PropTypes.func,
@@ -67,13 +74,13 @@ UploadEntity.contextTypes = {
 
 export function mapStateToProps(state) {
   return {
-    templates: state.uploads.templates,
+    templates: state.templates,
     metadataBeingEdited: state.uploads.uiState.get('metadataBeingEdited')
   };
 }
 
 function mapDispatchToProps(dispatch) {
-  return bindActionCreators({finishEdit, edit, loadEntity: entities.actions.loadEntity, publishEntity}, dispatch);
+  return bindActionCreators({finishEdit, edit, loadInReduxForm: actions.loadInReduxForm, publishEntity}, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(UploadEntity);

@@ -1,5 +1,3 @@
-import request from '../../shared/JSONRequest.js';
-import {db_url as dbUrl} from '../config/database.js';
 import needsAuthorization from '../auth/authMiddleware';
 import thesauris from './thesauris';
 
@@ -19,7 +17,21 @@ export default app => {
     if (req.query) {
       id = req.query._id;
     }
-    thesauris.get(id)
+    thesauris.get(id, req.language)
+    .then((response) => {
+      res.json(response);
+    })
+    .catch((error) => {
+      res.json({error: error.json});
+    });
+  });
+
+  app.get('/api/dictionaries', (req, res) => {
+    let id;
+    if (req.query) {
+      id = req.query._id;
+    }
+    thesauris.dictionaries(id)
     .then((response) => {
       res.json(response);
     })

@@ -7,7 +7,7 @@
 //
 .document .pf {
   position:relative;
-  background-color:#FFF;
+  //background-color:#FFF;
   overflow:hidden;
   border:0;
   margin:0;
@@ -83,11 +83,11 @@
 
 .t span {
   position:relative;
-  display:inline-block;
   unicode-bidi:bidi-override;
 }
 
 ._ {
+  display:inline-block;
   color:transparent;
   z-index:-1;
 }

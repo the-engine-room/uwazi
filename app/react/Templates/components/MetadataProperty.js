@@ -8,15 +8,20 @@ import {showModal} from 'app/Modals/actions/modalActions';
 import {reorderProperty, addProperty} from 'app/Templates/actions/templateActions';
 import FormConfigInput from './FormConfigInput';
 import FormConfigSelect from './FormConfigSelect';
+import FormConfigNested from './FormConfigNested';
+import ShowIf from 'app/App/ShowIf';
 import Icons from './Icons';
 
 export class MetadataProperty extends Component {
 
   renderForm() {
-    if (this.props.type === 'select' || this.props.type === 'list') {
+    if (this.props.type === 'select' || this.props.type === 'multiselect') {
       return <FormConfigSelect formKey={this.props.localID} index={this.props.index} />;
     }
-    return <FormConfigInput formKey={this.props.localID} index={this.props.index} />;
+    if (this.props.type === 'nested') {
+      return <FormConfigNested formKey={this.props.localID} index={this.props.index} />;
+    }
+    return <FormConfigInput type={this.props.type} formKey={this.props.localID} index={this.props.index} />;
   }
 
   hasError(propertyErrors) {
@@ -41,21 +46,26 @@ export class MetadataProperty extends Component {
 
     return connectDragSource(connectDropTarget(
       <li className={propertyClass}>
-        <div>
-           <span className="property-name"><i className="fa fa-reorder"></i>&nbsp;<i className={iconClass}></i>&nbsp;{label}</span>
-           <button type="button" className="btn btn-danger btn-xs pull-right property-remove" onClick={() =>
-             this.props.removeProperty('RemovePropertyModal', index)}
-           >
-            <i className="fa fa-trash"></i> Delete
-          </button>
-          &nbsp;
-          <button type="button" className="btn btn-default btn-xs pull-right property-edit" onClick={() => this.props.editProperty(localID)}>
+        <span className="property-name"><i className="fa fa-reorder"></i>&nbsp;<i className={iconClass}></i>&nbsp;{label}</span>
+        <div className="list-group-item-actions">
+          <ShowIf if={formState.errors[`properties.${index}.label.duplicated`]}>
+            <span className="validation-error">
+              <i className="fa fa-exclamation-triangle"></i>&nbsp;Duplicated label&nbsp;
+            </span>
+          </ShowIf>
+          <button type="button" className="btn btn-default btn-xs property-edit" onClick={() => this.props.editProperty(localID)}>
             <i className="fa fa-pencil"></i> Edit
           </button>
-        </div>
-        <div className={'propery-form' + (editingProperty === localID ? ' expand' : '') }>
-          {this.renderForm()}
-        </div>
+          <button type="button" className="btn btn-danger btn-xs property-remove"
+            onClick={() => this.props.removeProperty('RemovePropertyModal', index)} >
+            <i className="fa fa-trash"></i> Delete
+          </button>
+         </div>
+         <ShowIf if={editingProperty === localID}>
+           <div className={'propery-form' + (editingProperty === localID ? ' expand' : '') }>
+             {this.renderForm()}
+           </div>
+         </ShowIf>
       </li>
     ));
   }
@@ -88,8 +98,9 @@ const target = {
 
     if (typeof dragIndex === 'undefined') {
       let item = monitor.getItem();
+      item.inserting = true;
       item.index = 0;
-      return props.addProperty({label: item.label, type: item.type, inserting: true}, item.index);
+      return props.addProperty({label: item.label, type: item.type, inserting: true}, 0);
     }
     if (dragIndex === hoverIndex) {
       return;

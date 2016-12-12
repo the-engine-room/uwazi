@@ -27,13 +27,14 @@ app.use(compression());
 app.use(express.static(path.resolve(__dirname, 'dist')));
 app.use('/uploaded_documents', express.static(path.resolve(__dirname, 'uploaded_documents')));
 app.use('/public', express.static(path.resolve(__dirname, 'public')));
+app.use('/flag-images', express.static(path.resolve(__dirname, 'node_modules/react-flags/vendor/flags')));
 
 require('./app/api/api.js')(app, http);
 require('./app/react/server.js')(app);
 
 var ports = require('./app/api/config/ports.js');
 const port = ports[app.get('env')];
-http.listen(port, function onStart(err) {
+http.listen(port, '0.0.0.0', function onStart(err) {
   if (err) {
     console.log(err);
   }

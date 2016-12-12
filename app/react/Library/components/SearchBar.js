@@ -1,11 +1,12 @@
 import React, {Component, PropTypes} from 'react';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
-import {Link} from 'react-router';
+import {I18NLink} from 'app/I18N';
 import {Field, Form, actions as formActions} from 'react-redux-form';
 
 import {searchDocuments, setSearchTerm, getSuggestions, hideSuggestions, setOverSuggestions} from 'app/Library/actions/libraryActions';
 import debounce from 'app/utils/debounce';
+import {t} from 'app/I18N';
 
 export class SearchBar extends Component {
 
@@ -46,17 +47,20 @@ export class SearchBar extends Component {
     return (
       <div className={'search-box' + (this.props.open ? ' is-active' : '')}>
         <Form model="search" onSubmit={this.props.searchDocuments} autoComplete="off">
-          <div className={'form-group' + (search.searchTerm ? ' is-active' : '')}>
+          <div className={'input-group' + (search.searchTerm ? ' is-active' : '')}>
             <Field model="search.searchTerm">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder={t('System', 'Search')}
                 className="form-control"
                 onChange={this.getSuggestions.bind(this)}
                 onBlur={this.props.hideSuggestions}
                 autoComplete="off"
               />
             </Field>
+            <span className="input-group-btn" onClick={this.resetSearch.bind(this)}>
+              <div className="btn btn-primary btn-close"><i className="fa fa-close"></i></div>
+            </span>
           </div>
           <div
             onMouseOver={this.mouseEnter.bind(this)}
@@ -64,13 +68,13 @@ export class SearchBar extends Component {
             className={'search-suggestions' + (showSuggestions && search.searchTerm || overSuggestions ? ' is-active' : '')}
             >
             {suggestions.toJS().map((suggestion, index) => {
-              let documentViewUrl = '/document/' + suggestion._id;
+              let documentViewUrl = `/${suggestion.type}/${suggestion.sharedId}`;
               return <p key={index}>
-                <Link to={documentViewUrl}>
+                <I18NLink to={documentViewUrl}>
                   <span dangerouslySetInnerHTML={{__html: suggestion.title}}/>
-                  <i className="fa fa-arrow-left">
+                  <i className="fa fa-file-text-o">
                   </i>
-                </Link>
+                </I18NLink>
               </p>;
             })}
             <p className="search-suggestions-all">

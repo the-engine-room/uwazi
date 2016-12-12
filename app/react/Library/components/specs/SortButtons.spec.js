@@ -1,5 +1,6 @@
 import React from 'react';
 import {shallow} from 'enzyme';
+import {fromJS as immutable} from 'immutable';
 
 import {SortButtons} from 'app/Library/components/SortButtons';
 
@@ -15,71 +16,140 @@ describe('SortButtons', () => {
 
   beforeEach(() => {
     props = {
-      searchDocuments: jasmine.createSpy('searchDocuments'),
+      sortCallback: jasmine.createSpy('sortCallback'),
       merge: jasmine.createSpy('merge'),
-      search: {order: 'desc', sort: 'title.raw'}
+      search: {order: 'desc', sort: 'title'},
+      templates: immutable([
+        {properties: [{}, {sortable: true, name: 'sortable_name', label: 'sortableProperty', type: 'text'}]}
+      ]),
+      stateProperty: 'search'
     };
   });
 
-  describe('sort', () => {
-    it('should merge with searchTerm and filtersForm and toggle between asc/desc', () => {
+  describe('Sort options', () => {
+    it('should use templates sortable properties as options', () => {
       render();
-      instance.sort('title.raw');
-      expect(props.searchDocuments).toHaveBeenCalledWith({sort: 'title.raw', order: 'asc'});
-
-      props.search.order = 'asc';
-      render();
-      instance.sort('title.raw');
-      expect(props.searchDocuments).toHaveBeenCalledWith({sort: 'title.raw', order: 'desc'});
-      expect(props.merge).toHaveBeenCalledWith('search', {sort: 'title.raw', order: 'desc'});
+      expect(component.find('li').length).toBe(3);
+      expect(component.find('li').last().text()).toBe('sortableProperty');
     });
 
-    describe('when changing property being sort', () => {
-      it('should maintain order for the first sort and then toggle it', () => {
-        props.search = {order: 'desc', sort: 'title.raw'};
+    describe('when multiple options have the same name', () => {
+      it('should not duplicate the entry', () => {
+        props.templates = immutable([
+          {properties: [{}, {sortable: true, name: 'sortable_name', label: 'sortableProperty', type: 'text'}]},
+          {properties: [{sortable: true, name: 'sortable_name', label: 'anotherLabel', type: 'text'}]}
+        ]);
         render();
-        instance.sort('title.raw');
-        expect(props.searchDocuments).toHaveBeenCalledWith({sort: 'title.raw', order: 'asc'});
 
-        props.searchDocuments.calls.reset();
-        props.search = {order: 'asc', sort: 'title.raw'};
+        expect(component.find('li').length).toBe(3);
+        expect(component.find('li').last().text()).toBe('sortableProperty');
+      });
+    });
+
+    describe('when active', () => {
+      it('should set the option active', () => {
+        props.search.sort = 'metadata.sortable_name';
         render();
-        instance.sort('creationDate');
-        expect(props.searchDocuments).toHaveBeenCalledWith({sort: 'creationDate', order: 'asc'});
+        expect(component.find('li').last().hasClass('is-active')).toBe(true);
+      });
+    });
+
+    describe('clicking an option', () => {
+      it('should sort by that property with default order (asc for text and desc for date)', () => {
+        render();
+        component.setState({active: true});
+        component.find('li').last().simulate('click');
+        expect(props.sortCallback).toHaveBeenCalledWith({sort: 'metadata.sortable_name', order: 'asc'});
+
+        const templates = props.templates.toJS();
+        templates[0].properties[1].name = 'different_name';
+        templates[0].properties[1].type = 'date';
+        props.templates = immutable(templates);
+
+        render();
+        component.setState({active: true});
+
+        component.find('li').last().simulate('click');
+        expect(props.sortCallback).toHaveBeenCalledWith({sort: 'metadata.different_name', order: 'desc'});
       });
     });
   });
 
-  describe('when filtering title.raw property asc', () => {
-    it('should set active title.raw with up arrow', () => {
-      props.search = {order: 'asc', sort: 'title.raw'};
+  describe('sort', () => {
+    it('should merge with searchTerm and filtersForm and NOT toggle between asc/desc', () => {
       render();
-      let title = component.find('span').first();
-      expect(title.hasClass('active')).toBe(true);
-      expect(title.find('i').hasClass('fa-caret-up')).toBe(true);
+      instance.sort('title', 'asc', 'number');
+      expect(props.sortCallback).toHaveBeenCalledWith({sort: 'title', order: 'asc'});
+
+      props.search.order = 'asc';
+      props.search.treatAs = 'number';
+      render();
+      instance.sort('title', 'asc', 'string');
+      expect(props.merge).toHaveBeenCalledWith('search', {sort: 'title', order: 'asc', treatAs: 'number'});
+      expect(props.sortCallback).toHaveBeenCalledWith({sort: 'title', order: 'asc'});
+    });
+
+    it('should not fail if no sortCallback', () => {
+      delete props.sortCallback;
+      render();
+      let error;
+      try {
+        instance.sort('title');
+      } catch (err) {
+        error = err;
+      }
+      expect(error).toBeUndefined();
+    });
+
+    describe('when changing property being sorted', () => {
+      it('should use default order', () => {
+        props.search = {order: 'desc', sort: 'title'};
+        render();
+        instance.sort('title');
+        expect(props.sortCallback).toHaveBeenCalledWith({sort: 'title', order: 'asc'});
+
+        props.sortCallback.calls.reset();
+        props.search = {order: 'desc', sort: 'title'};
+        render();
+        instance.sort('creationDate', 'desc');
+        expect(props.sortCallback).toHaveBeenCalledWith({sort: 'creationDate', order: 'desc'});
+
+        props.sortCallback.calls.reset();
+        props.search = {order: 'desc', sort: 'title'};
+        render();
+        instance.sort('creationDate', 'asc');
+        expect(props.sortCallback).toHaveBeenCalledWith({sort: 'creationDate', order: 'asc'});
+      });
+    });
+
+    describe('when changing order', () => {
+      it('should keep the treatAs property', () => {
+        props.search = {order: 'desc', sort: 'title', treatAs: 'number'};
+        render();
+        instance.sort('title');
+        instance.changeOrder();
+        expect(props.merge).toHaveBeenCalledWith('search', {sort: 'title', order: 'asc', treatAs: 'number'});
+      });
     });
   });
 
-  describe('when filtering title.raw property desc', () => {
-    it('should set active title.raw with up arrow', () => {
-      props.search = {order: 'desc', sort: 'title.raw'};
+  describe('when filtering title property', () => {
+    it('should set active title', () => {
+      props.search = {order: 'asc', sort: 'title'};
       render();
-      let title = component.find('span').first();
-      expect(title.hasClass('active')).toBe(true);
-      expect(title.find('i').hasClass('fa-caret-down')).toBe(true);
+      let title = component.find('li').at(0);
+      expect(title.hasClass('is-active')).toBe(true);
     });
   });
 
   describe('when filtering creationDate property asc', () => {
-    it('should set active recent with up arrow', () => {
+    it('should set active recent', () => {
       props.search = {order: 'asc', sort: 'creationDate'};
       render();
-      let title = component.find('span').first();
-      let recent = component.find('span').last();
-      expect(title.hasClass('active')).toBe(false);
-      expect(recent.hasClass('active')).toBe(true);
-      expect(title.find('i').length).toBe(0);
-      expect(recent.find('i').hasClass('fa-caret-up')).toBe(true);
+      let title = component.find('li').at(0);
+      let recent = component.find('li').at(1);
+      expect(title.hasClass('is-active')).toBe(false);
+      expect(recent.hasClass('is-active')).toBe(true);
     });
   });
 });

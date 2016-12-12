@@ -1,55 +1,51 @@
 import * as actions from '../actions';
-import {actions as formActions} from 'react-redux-form';
+import * as Notifications from 'app/Notifications';
+import api from 'app/Entities/EntitiesAPI';
+import refenrecesAPI from 'app/Viewer/referencesAPI';
 
-describe('entityFormActions', () => {
-  describe('loadEntity', () => {
-    it('should load the entity with default metadata properties if not present', () => {
-      spyOn(formActions, 'load').and.returnValue('formload');
-      let dispatch = jasmine.createSpy('dispatch');
-      let entity = {title: 'test', template: 'templateId', metadata: {test: 'test', test2: 'test2'}};
-      let templates = [{_id: 'templateId', properties: [{name: 'test'}, {name: 'newProp'}]}];
+describe('Entities actions', () => {
+  let dispatch;
 
+  beforeEach(() => {
+    dispatch = jasmine.createSpy('dispatch');
+    spyOn(api, 'save').and.returnValue(Promise.resolve({_id: 'newId', _rev: 'newRev'}));
+    spyOn(api, 'delete').and.returnValue(Promise.resolve());
+    spyOn(refenrecesAPI, 'delete').and.returnValue(Promise.resolve());
+    spyOn(Notifications, 'notify').and.returnValue('NOTIFIED');
+  });
 
-      actions.loadEntity('formNamespace', entity, templates)(dispatch);
-
-      let expectedEntity = {title: 'test', template: 'templateId', metadata: {test: 'test', test2: 'test2', newProp: ''}};
-      expect(dispatch).toHaveBeenCalledWith('formload');
-      expect(formActions.load).toHaveBeenCalledWith('formNamespace', expectedEntity);
-    });
-
-    it('should should set the first template if entity has no template', () => {
-      spyOn(formActions, 'load').and.returnValue('formload');
-      spyOn(formActions, 'setInitial').and.returnValue('forminitial');
-      let dispatch = jasmine.createSpy('dispatch');
-      let entity = {title: 'test'};
-      let templates = [{_id: 'templateId', properties: [{name: 'test'}, {name: 'newProp'}]}];
-
-
-      actions.loadEntity('formNamespace', entity, templates)(dispatch);
-
-      let expectedEntity = {title: 'test', metadata: {test: '', newProp: ''}, template: 'templateId'};
-      expect(dispatch).toHaveBeenCalledWith('formload');
-      expect(dispatch).toHaveBeenCalledWith('forminitial');
-      expect(formActions.load).toHaveBeenCalledWith('formNamespace', expectedEntity);
-      expect(formActions.setInitial).toHaveBeenCalledWith('formNamespace');
+  describe('saveEntity', () => {
+    it('should dispatch a saving entity and save the data', (done) => {
+      actions.saveEntity('data')(dispatch)
+      .then(() => {
+        expect(api.save).toHaveBeenCalledWith('data');
+        expect(Notifications.notify).toHaveBeenCalledWith('Entity saved', 'success');
+        expect(dispatch).toHaveBeenCalledWith({type: 'entityView/entity/SET', value: {_id: 'newId', _rev: 'newRev'}});
+        expect(dispatch).toHaveBeenCalledWith({type: 'rrf/reset', model: 'entityView.entityForm'});
+        done();
+      });
     });
   });
 
-  describe('changeTemplate', () => {
-    it('should change the entity template and remove/add metadata properties', () => {
-      spyOn(formActions, 'setInitial').and.returnValue('forminitial');
-      spyOn(formActions, 'change').and.returnValue('formMerge');
-      let dispatch = jasmine.createSpy('dispatch');
-      let entity = {title: 'test', template: 'templateId', metadata: {test: 'test', test2: 'test2'}};
-      let template = {_id: 'newTemplate', properties: [{name: 'test'}, {name: 'newProp'}]};
+  describe('deleteEntity', () => {
+    it('should delete the entity and notify', (done) => {
+      actions.deleteEntity('data')(dispatch)
+      .then(() => {
+        expect(api.delete).toHaveBeenCalledWith('data');
+        expect(Notifications.notify).toHaveBeenCalledWith('Entity deleted', 'success');
+        done();
+      });
+    });
+  });
 
-
-      actions.changeTemplate('formNamespace', entity, template)(dispatch);
-
-      let expectedEntity = {title: 'test', template: 'newTemplate', metadata: {test: 'test', newProp: ''}};
-      expect(dispatch).toHaveBeenCalledWith('formMerge');
-      expect(formActions.setInitial).toHaveBeenCalledWith('formNamespace');
-      expect(formActions.change).toHaveBeenCalledWith('formNamespace', expectedEntity);
+  describe('deleteReference', () => {
+    it('should delete the reference and notify', (done) => {
+      actions.deleteReference('data')(dispatch)
+      .then(() => {
+        expect(refenrecesAPI.delete).toHaveBeenCalledWith('data');
+        expect(Notifications.notify).toHaveBeenCalledWith('Connection deleted', 'success');
+        done();
+      });
     });
   });
 });

@@ -36,18 +36,16 @@ class Root extends Component {
             rel="stylesheet"
             type="text/css"
           />
-          <link
-          href="https://fonts.googleapis.com/css?family=Roboto|Droid+Serif" //eslint-disable-line
-          rel="stylesheet"
-          type="text/css"
-          />
+          <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:100,300,400,500,700|Roboto+Slab:100,300,400,700|Roboto:100,300,400,500,700,900" //eslint-disable-line
+                rel="stylesheet"
+                type="text/css"/>
           <link rel="shortcut icon" href="/public/favicon.ico"/>
         </head>
         <body>
           <div id="root" dangerouslySetInnerHTML={{__html: this.props.content}} />
           {this.renderInitialData()}
           {head.script.toComponent()}
-          <script src={isDeveloping ? '/bundle.js' : '/bundle.js'}></script>
+          <script src={isDeveloping ? '/main.bundle.js' : '/main.bundle.js'}></script>
         </body>
       </html>
     );

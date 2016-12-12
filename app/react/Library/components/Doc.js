@@ -1,11 +1,11 @@
 import React, {Component, PropTypes} from 'react';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
-import {Link} from 'react-router';
-import UTCToLocal from 'app/Layout/UTCToLocal';
+import {I18NLink} from 'app/I18N';
 import {selectDocument, unselectDocument} from '../actions/libraryActions';
 
-import {RowList, ItemFooter, ItemName} from 'app/Layout/Lists';
+import {Item} from 'app/Layout';
+import {is} from 'immutable';
 
 export class Doc extends Component {
 
@@ -16,59 +16,36 @@ export class Doc extends Component {
     this.props.selectDocument(this.props.doc);
   }
 
+  shouldComponentUpdate(nextProps) {
+    return !is(this.props.doc, nextProps.doc) || this.props.active !== nextProps.active;
+  }
+
   render() {
-    let {title, _id, creationDate, template} = this.props.doc;
-    let documentViewUrl = '/document/' + _id;
-    let typeIndex = 'item-type item-type-0';
-    let type = this.props.templates.toJS().reduce((result, templ, index) => {
-      if (templ._id === template) {
-        typeIndex = 'item-type item-type-' + index;
-        return templ.name;
-      }
-      return result;
-    }, '');
+    const {type, sharedId} = this.props.doc.toJS();
+    const documentViewUrl = `/${type}/${sharedId}`;
 
-    let active;
-    if (this.props.selectedDocument) {
-      active = this.props.selectedDocument === this.props.doc._id;
-    }
-
-    return (
-      <RowList.Item active={active} onClick={this.select.bind(this, active)}>
-        <div className="item-info">
-          <span className={typeIndex}>{type}</span>
-          <ItemName>{title}</ItemName>
-        </div>
-        <div className="item-metadata">
-            <dl>
-                <dt>Upload date</dt>
-                <dd><UTCToLocal utc={creationDate}/></dd>
-            </dl>
-        </div>
-        <ItemFooter>
-          <Link to={documentViewUrl} className="item-shortcut">
-            <i className="fa fa-file-o"></i><span>View</span><i className="fa fa-angle-right"></i>
-          </Link>
-        </ItemFooter>
-      </RowList.Item>
-    );
+    return <Item onClick={this.select.bind(this, this.props.active)}
+                 active={this.props.active}
+                 doc={this.props.doc}
+                 buttons={<I18NLink to={documentViewUrl} className="item-shortcut">
+                            <span className="itemShortcut-arrow">
+                              <i className="fa fa-file-text-o"></i>
+                             </span>
+                          </I18NLink>}/>;
   }
 }
 
 Doc.propTypes = {
   doc: PropTypes.object,
-  selectedDocument: PropTypes.string,
+  active: PropTypes.bool,
   selectDocument: PropTypes.func,
-  unselectDocument: PropTypes.func,
-  creationDate: PropTypes.number,
-  templates: PropTypes.object
+  unselectDocument: PropTypes.func
 };
 
 
-export function mapStateToProps({library}) {
+export function mapStateToProps({library}, ownProps) {
   return {
-    selectedDocument: library.ui.get('selectedDocument') ? library.ui.get('selectedDocument').get('_id') : '',
-    templates: library.filters.get('templates')
+    active: library.ui.get('selectedDocument') ? library.ui.get('selectedDocument').get('_id') === ownProps.doc.get('_id') : false
   };
 }
 

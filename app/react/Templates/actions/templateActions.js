@@ -4,6 +4,7 @@ import * as types from 'app/Templates/actions/actionTypes';
 import {notify} from 'app/Notifications';
 import api from 'app/Templates/TemplatesAPI';
 import ID from 'shared/uniqueID';
+import {actions} from 'app/BasicReducer';
 
 export function resetTemplate() {
   return function (dispatch) {
@@ -16,6 +17,10 @@ export function addProperty(property = {}, index = 0) {
   return function (dispatch, getState) {
     if (property.type === 'select') {
       property.content = getState().thesauris.toJS()[0]._id;
+    }
+
+    if (property.type === 'nested') {
+      property.nestedProperties = [];
     }
 
     let properties = getState().template.data.properties.slice(0);
@@ -66,8 +71,9 @@ export function saveTemplate(data) {
     return api.save(data)
     .then((response) => {
       dispatch({type: types.TEMPLATE_SAVED, data: response});
+      dispatch(actions.update('templates', response));
 
-      dispatch(formActions.merge('template.data', {_id: response.id, _rev: response.rev}));
+      dispatch(formActions.merge('template.data', {_id: response._id, _rev: response._rev}));
       dispatch(notify('Saved successfully.', 'success'));
     });
   };

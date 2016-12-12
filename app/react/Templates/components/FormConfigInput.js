@@ -3,10 +3,12 @@ import FilterSuggestions from 'app/Templates/components/FilterSuggestions';
 import {FormField} from 'app/Forms';
 import {connect} from 'react-redux';
 
+import ShowIf from 'app/App/ShowIf';
+
 export class FormConfigInput extends Component {
 
   render() {
-    const {index, data, formState} = this.props;
+    const {index, data, formState, type} = this.props;
     const ptoperty = data.properties[index];
     let labelClass = 'input-group';
     let labelKey = `properties.${index}.label`;
@@ -19,7 +21,7 @@ export class FormConfigInput extends Component {
     return (
       <div>
         <div className="row">
-          <div className="col-sm-6">
+          <div className="col-sm-12">
             <div className={labelClass}>
               <span className="input-group-addon">
                 Label
@@ -29,31 +31,57 @@ export class FormConfigInput extends Component {
               </FormField>
             </div>
           </div>
-          <div className="col-sm-6">
+        </div>
+        <div className="row">
+          <div className="col-sm-4">
             <div className="input-group">
               <span className="input-group-addon">
                 <FormField model={`template.data.properties[${index}].required`}>
-                  <input id={'required' + index} type="checkbox" className="asd"/>
+                  <input id={'required' + index} type="checkbox"/>
                 </FormField>
               </span>
               <label htmlFor={'required' + index} className="form-control">Required</label>
             </div>
           </div>
-        </div>
-        {(() => {
-          if (duplicatedLabel) {
-            return <div className="row validation-error">
-                    <div className="col-sm-4">
-                      <i className="fa fa-exclamation-triangle"></i>
-                      &nbsp;
-                      Duplicated label
-                    </div>
-                  </div>;
-          }
-        })()}
-        <div className="well">
-          <div className="row">
+          <div className="col-sm-4">
+            <div className="input-group">
+              <span className="input-group-addon">
+                <FormField model={`template.data.properties[${index}].showInCard`}>
+                  <input id={'showInCard' + this.props.index} type="checkbox"/>
+                </FormField>
+              </span>
+              <label htmlFor={'showInCard' + this.props.index}
+                     className="form-control"
+                     title="This property will appear in the library cards as part of the basic info.">
+                Show in cards
+                &nbsp;
+                <i className="fa fa-question-circle"></i>
+              </label>
+            </div>
+          </div>
+          <ShowIf if={type === 'text' || type === 'date'}>
             <div className="col-sm-4">
+              <div className="input-group">
+                <span className="input-group-addon">
+                  <FormField model={`template.data.properties[${index}].sortable`}>
+                    <input id={'sortable' + this.props.index} type="checkbox"/>
+                  </FormField>
+                </span>
+                <label htmlFor={'sortable' + this.props.index}
+                  title="Library items will be able to be sorted by this property."
+                  className="form-control">
+                  Sortable
+                  &nbsp;
+                  <i className="fa fa-question-circle"></i>
+                </label>
+              </div>
+            </div>
+          </ShowIf>
+        </div>
+
+        <div className="well-metadata-creator">
+          <div>
+            <div>
               <FormField model={`template.data.properties[${index}].filter`}>
                 <input id={'filter' + this.props.index} type="checkbox"/>
               </FormField>
@@ -65,11 +93,13 @@ export class FormConfigInput extends Component {
                 <i className="fa fa-question-circle"></i>
               </label>
             </div>
-            <div className="col-sm-8">
+            <div>
               <FilterSuggestions {...ptoperty} />
             </div>
           </div>
+
         </div>
+
       </div>
     );
   }
@@ -79,7 +109,8 @@ FormConfigInput.propTypes = {
   data: PropTypes.object,
   index: PropTypes.number,
   formState: PropTypes.object,
-  formKey: PropTypes.string
+  formKey: PropTypes.string,
+  type: PropTypes.string
 };
 
 export function mapStateToProps({template}) {

@@ -1,53 +1,42 @@
+import api from '../EntitiesAPI';
+import {notify} from 'app/Notifications';
 import {actions as formActions} from 'react-redux-form';
+import {actions} from 'app/BasicReducer';
+import refenrecesAPI from 'app/Viewer/referencesAPI';
+import {removeDocument, unselectDocument} from 'app/Library/actions/libraryActions';
 
-export function loadEntity(form, entity, templates) {
+export function saveEntity(entity) {
   return function (dispatch) {
-    //test
-    let newEntity = Object.assign({}, entity);
-    //
-    if (!newEntity.template) {
-      newEntity.template = templates[0]._id;
-    }
-
-    if (!newEntity.metadata) {
-      newEntity.metadata = {};
-    }
-
-    let template = templates.find((t) => t._id === newEntity.template);
-    template.properties.forEach((property) => {
-      if (!newEntity.metadata[property.name] && property.type !== 'date') {
-        newEntity.metadata[property.name] = '';
-      }
+    return api.save(entity)
+    .then((response) => {
+      dispatch(notify('Entity saved', 'success'));
+      dispatch(formActions.reset('entityView.entityForm'));
+      dispatch(actions.set('entityView/entity', response));
     });
-
-    dispatch(formActions.load(form, newEntity));
-    dispatch(formActions.setInitial(form));
   };
 }
 
-export function changeTemplate(form, entity, template) {
+export function deleteEntity(entity) {
   return function (dispatch) {
-    let propertyNames = [];
-    //test
-    let newEntity = Object.assign({}, entity);
-    newEntity.metadata = Object.assign({}, entity.metadata);
-    //test
-    template.properties.forEach((property) => {
-      if (!newEntity.metadata[property.name]) {
-        newEntity.metadata[property.name] = '';
-      }
-      propertyNames.push(property.name);
+    return api.delete(entity)
+    .then(() => {
+      dispatch(notify('Entity deleted', 'success'));
+      dispatch(removeDocument(entity));
+      dispatch(unselectDocument);
     });
+  };
+}
 
-    Object.keys(newEntity.metadata).forEach((propertyName) => {
-      if (propertyNames.indexOf(propertyName) === -1) {
-        delete newEntity.metadata[propertyName];
-      }
+export function addReference(reference) {
+  return actions.push('entityView/references', reference);
+}
+
+export function deleteReference(reference) {
+  return function (dispatch) {
+    return refenrecesAPI.delete(reference)
+    .then(() => {
+      dispatch(actions.remove('entityView/references', reference));
+      dispatch(notify('Connection deleted', 'success'));
     });
-
-    newEntity.template = template._id;
-
-    dispatch(formActions.setInitial(form));
-    dispatch(formActions.change(form, newEntity));
   };
 }

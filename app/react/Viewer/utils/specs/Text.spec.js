@@ -32,6 +32,18 @@ describe('Text', () => {
       expect(serializedRange).toEqual({start: 1, end: 10, text: 'text'});
       expect(TextRange.serialize).toHaveBeenCalledWith(range, document);
     });
+
+    describe('with range', () => {
+      it('should return serialized selection adding offset', () => {
+        spyOn(TextRange, 'serialize').and.returnValue({start: 1, end: 10});
+        let range = mockRangeSelection('text');
+        text.range({start: 10});
+
+        let serializedRange = text.getSelection();
+        expect(serializedRange).toEqual({start: 11, end: 20, text: 'text'});
+        expect(TextRange.serialize).toHaveBeenCalledWith(range, document);
+      });
+    });
   });
 
   describe('simulateSelection', () => {
@@ -42,15 +54,30 @@ describe('Text', () => {
         spyOn(text, 'selected').and.returnValue(false);
         spyOn(text, 'removeSimulatedSelection');
 
-        text.simulateSelection('range');
+        text.range({start: 0, end: 90});
+        text.simulateSelection({start: 1, end: 2});
 
         let elementWrapper = document.createElement('span');
         elementWrapper.classList.add('fake-selection');
 
-        expect(TextRange.restore).toHaveBeenCalledWith('range', document);
+        expect(TextRange.restore).toHaveBeenCalledWith({start: 1, end: 2}, document);
         expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper, 'restoredRange');
         expect(text.fakeSelection).toBe('fakeSelection');
         expect(text.removeSimulatedSelection).toHaveBeenCalled();
+      });
+
+      describe('when the range rendered does not match the range selected', () => {
+        it('should not render the selection', () => {
+          spyOn(wrapper, 'wrap').and.returnValue('fakeSelection');
+          spyOn(TextRange, 'restore').and.returnValue('restoredRange');
+          spyOn(text, 'selected').and.returnValue(false);
+          spyOn(text, 'removeSimulatedSelection');
+
+          text.range({start: 0, end: 10});
+          text.simulateSelection({start: 15, end: 25});
+
+          expect(TextRange.restore).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -101,9 +128,9 @@ describe('Text', () => {
   describe('renderReferences', () => {
     let unwrap;
 
-    let elementWrapper = (id) => {
+    let elementWrapper = (id, className = 'reference') => {
       let element = document.createElement('a');
-      element.classList.add('reference');
+      element.classList.add(className);
       element.setAttribute('data-id', id);
       return element;
     };
@@ -115,20 +142,11 @@ describe('Text', () => {
     });
 
     describe('when a reference has no range to render', () => {
-      it('should not call on restore', () => {
-        let references = [{_id: '1', range: {text: ''}}];
+      it('should not throw an error', () => {
+        let references = [{_id: '1'}];
 
         text.renderReferences(references);
         expect(TextRange.restore).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when a reference has a range starting at 0 (false negative) to render', () => {
-      it('should call restore', () => {
-        let references = [{_id: '1', range: {text: '', start: 0}}];
-
-        text.renderReferences(references);
-        expect(TextRange.restore).toHaveBeenCalled();
       });
     });
 
@@ -136,26 +154,36 @@ describe('Text', () => {
       it('should throw an error', () => {
         document.innerHTML = '';
         text = Text(document);
-        let references = [{_id: '1', sourceRange: 'sourceRange1'}, {_id: '2', sourceRange: 'sourceRange2'}];
+        let references = [{_id: '1', range: 'sourceRange1'}, {_id: '2', range: 'sourceRange2'}];
 
         expect(text.renderReferences.bind(text, references)).toThrow();
       });
     });
 
-    it('should wrap a collection of references', () => {
-      let references = [{_id: '1', range: {start: 0}}, {_id: '2', range: {start: 50}}];
+    it('should wrap a collection of references using range by default', () => {
+      let references = [{_id: '1', range: 'sourceRange1'}, {_id: '2', range: 'sourceRange2'}];
 
       text.renderReferences(references);
-      expect(TextRange.restore).toHaveBeenCalledWith({start: 0}, document);
-      expect(TextRange.restore).toHaveBeenCalledWith({start: 50}, document);
+      expect(TextRange.restore).toHaveBeenCalledWith('sourceRange1', document);
+      expect(TextRange.restore).toHaveBeenCalledWith('sourceRange2', document);
       expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('1'), 'restoredRange');
       expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('2'), 'restoredRange');
     });
 
+    it('should wrap a collection of references using identifier passed', () => {
+      let references = [{_id: '1', range: 'targetRange1'}, {_id: '2', range: 'targetRange2'}];
+
+      text.renderReferences(references, 'identifier');
+      expect(TextRange.restore).toHaveBeenCalledWith('targetRange1', document);
+      expect(TextRange.restore).toHaveBeenCalledWith('targetRange2', document);
+      expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('1', 'identifier'), 'restoredRange');
+      expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('2', 'identifier'), 'restoredRange');
+    });
+
     it('should not render references already rendered', () => {
-      let firstReferneces = [{_id: '1', range: {start: 0}}, {_id: '2', range: {start: 10}}];
+      let firstReferneces = [{_id: '1', range: 'sourceRange1'}, {_id: '2', range: 'sourceRange2'}];
       let secondReferences = [
-        {_id: '1', range: {start: 0}}, {_id: '2', range: {start: 10}}, {_id: '3', range: {start: 20}}
+        {_id: '1', range: 'sourceRange1'}, {_id: '2', range: 'sourceRange2'}, {_id: '3', range: 'sourceRange3'}
       ];
       text.renderReferences(firstReferneces);
       TextRange.restore.calls.reset();
@@ -164,18 +192,37 @@ describe('Text', () => {
 
       expect(TextRange.restore.calls.count()).toBe(1);
       expect(wrapper.wrap.calls.count()).toBe(1);
-      expect(TextRange.restore).toHaveBeenCalledWith({start: 20}, document);
+      expect(TextRange.restore).toHaveBeenCalledWith('sourceRange3', document);
       expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('3'), 'restoredRange');
     });
 
-    it('should unwrap references that are passed in multiple calls', () => {
-      let firstReferneces = [{_id: '1', range: {start: 1}}, {_id: '2', range: {start: 2}}];
-      let secondReferences = [{_id: '2', range: {start: 2}}, {_id: '3', range: {start: 3}}];
+    it('should unwrap references that are passed by propertyRange in multiple calls', () => {
+      let firstReferneces = [{_id: '1', range: 'sourceRange1'}, {_id: '2', range: 'sourceRange2'}];
+      let secondReferences = [{_id: '2', range: 'sourceRange2'}, {_id: '3', range: 'sourceRange3'}];
       text.renderReferences(firstReferneces);
       text.renderReferences(secondReferences);
+      text.renderReferences([], 'targetRange');
 
       expect(unwrap.calls.count()).toBe(1);
-      expect(text.renderedReferences[1]).not.toBeDefined();
+      expect(text.renderedReferences.reference[1]).not.toBeDefined();
+    });
+
+    describe('with range', () => {
+      it('should only render references inside the range adding the start offset of the range being rendered', () => {
+        let references = [
+          {_id: '1', range: {start: 14, end: 45}},
+          {_id: '2', range: {start: 4, end: 16}},
+          {_id: '3', range: {start: 3, end: 5}},
+          {_id: '4', range: {start: 56, end: 60}}
+        ];
+
+        text.range({start: 10, end: 55});
+        text.renderReferences(references);
+        expect(TextRange.restore).toHaveBeenCalledWith({start: 4, end: 35}, document);
+        expect(TextRange.restore).toHaveBeenCalledWith({start: 0, end: 6}, document);
+        expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('1'), 'restoredRange');
+        expect(wrapper.wrap).toHaveBeenCalledWith(elementWrapper('2'), 'restoredRange');
+      });
     });
   });
 
@@ -186,11 +233,15 @@ describe('Text', () => {
 
     beforeEach(() => {
       text.renderedReferences = {
-        reference1: {
-          nodes: [createElement(), createElement()]
+        targetRange: {
+          reference1: {
+            nodes: [createElement(), createElement()]
+          }
         },
-        reference2: {
-          nodes: [createElement(), createElement(), createElement()]
+        sourceRange: {
+          reference2: {
+            nodes: [createElement(), createElement(), createElement()]
+          }
         }
       };
     });
@@ -198,8 +249,8 @@ describe('Text', () => {
     it('should add class highlighted to all nodes of a reference', () => {
       text.highlight('reference2');
 
-      expect(text.renderedReferences.reference2.nodes[0].className).toBe('highlighted');
-      expect(text.renderedReferences.reference2.nodes[1].className).toBe('highlighted');
+      expect(text.renderedReferences.sourceRange.reference2.nodes[0].className).toBe('highlighted');
+      expect(text.renderedReferences.sourceRange.reference2.nodes[1].className).toBe('highlighted');
     });
 
     it('should handle unexistant references', () => {
@@ -210,10 +261,10 @@ describe('Text', () => {
       text.highlight('reference2');
       text.highlight('reference1');
 
-      expect(text.renderedReferences.reference2.nodes[0].className).toBe('');
-      expect(text.renderedReferences.reference2.nodes[1].className).toBe('');
-      expect(text.renderedReferences.reference1.nodes[0].className).toBe('highlighted');
-      expect(text.renderedReferences.reference1.nodes[1].className).toBe('highlighted');
+      expect(text.renderedReferences.sourceRange.reference2.nodes[0].className).toBe('');
+      expect(text.renderedReferences.sourceRange.reference2.nodes[1].className).toBe('');
+      expect(text.renderedReferences.targetRange.reference1.nodes[0].className).toBe('highlighted');
+      expect(text.renderedReferences.targetRange.reference1.nodes[1].className).toBe('highlighted');
     });
 
     describe('when passing null', () => {
@@ -230,11 +281,15 @@ describe('Text', () => {
 
     beforeEach(() => {
       text.renderedReferences = {
-        reference1: {
-          nodes: [createElement(), createElement()]
+        sourceRange: {
+          reference1: {
+            nodes: [createElement(), createElement()]
+          }
         },
-        reference2: {
-          nodes: [createElement(), createElement(), createElement()]
+        targetRange: {
+          reference2: {
+            nodes: [createElement(), createElement(), createElement()]
+          }
         }
       };
     });
@@ -242,8 +297,8 @@ describe('Text', () => {
     it('should add class is-active to all nodes of a reference', () => {
       text.activate('reference2');
 
-      expect(text.renderedReferences.reference2.nodes[0].className).toBe('is-active');
-      expect(text.renderedReferences.reference2.nodes[1].className).toBe('is-active');
+      expect(text.renderedReferences.targetRange.reference2.nodes[0].className).toBe('is-active');
+      expect(text.renderedReferences.targetRange.reference2.nodes[1].className).toBe('is-active');
     });
 
     it('should handle unexistant references', () => {
@@ -254,10 +309,10 @@ describe('Text', () => {
       text.activate('reference2');
       text.activate('reference1');
 
-      expect(text.renderedReferences.reference2.nodes[0].className).toBe('');
-      expect(text.renderedReferences.reference2.nodes[1].className).toBe('');
-      expect(text.renderedReferences.reference1.nodes[0].className).toBe('is-active');
-      expect(text.renderedReferences.reference1.nodes[1].className).toBe('is-active');
+      expect(text.renderedReferences.targetRange.reference2.nodes[0].className).toBe('');
+      expect(text.renderedReferences.targetRange.reference2.nodes[1].className).toBe('');
+      expect(text.renderedReferences.sourceRange.reference1.nodes[0].className).toBe('is-active');
+      expect(text.renderedReferences.sourceRange.reference1.nodes[1].className).toBe('is-active');
     });
 
     describe('when passing null', () => {

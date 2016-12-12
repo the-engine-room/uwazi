@@ -1,13 +1,9 @@
-import helpers from './helpers';
-import DocumentForm from './components/DocumentForm';
-import ShowDocument from './components/ShowDocument';
 import DocumentsAPI from './DocumentsAPI';
-import * as actions from './actions/actions';
+import TocForm from './components/TocForm';
+import ShowToc from './components/ShowToc';
 
 export default {
-  helpers,
-  actions,
-  api: DocumentsAPI
+  api: DocumentsAPI,
+  TocForm,
+  ShowToc
 };
-
-export {DocumentForm, ShowDocument};

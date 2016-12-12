@@ -10,8 +10,16 @@ export default function (state = initialState, action = {}) {
     return state.set('highlightedReference', action.reference);
   }
 
+  if (action.type === types.GO_TO_ACTIVE) {
+    return state.set('goToActive', action.value);
+  }
+
   if (action.type === types.DEACTIVATE_REFERENCE) {
     return state.remove('activeReference');
+  }
+
+  if (action.type === types.SHOW_TAB) {
+    return state.set('tab', action.tab);
   }
 
   if (action.type === types.ACTIVE_REFERENCE) {
@@ -22,16 +30,8 @@ export default function (state = initialState, action = {}) {
     return state.set('panel', action.panel);
   }
 
-  if (action.type === types.VIEWER_SEARCHING) {
-    return state.set('viewerSearching', true);
-  }
-
   if (action.type === types.RESET_REFERENCE_CREATION) {
     return state.set('reference', Immutable.fromJS({}));
-  }
-
-  if (action.type === types.SET_RELATION_TYPE) {
-    return state.setIn(['reference', 'relationType'], action.relationType);
   }
 
   if (action.type === types.SET_SELECTION) {
@@ -58,7 +58,7 @@ export default function (state = initialState, action = {}) {
     return state.set('panel', false);
   }
 
-  if (action.type === types.ADD_CREATED_REFERENCE) {
+  if (action.type === types.ADD_REFERENCE) {
     return state.set('reference', Immutable.fromJS({})).set('panel', false);
   }
 

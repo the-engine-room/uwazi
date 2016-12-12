@@ -14,6 +14,21 @@ export class FormConfigSelect extends Component {
     const thesauris = this.props.thesauris.toJS();
     const ptoperty = data.properties[index];
 
+    let optionGroups = [
+      {label: 'Dictionaries', options: []},
+      {label: 'Entities', options: []}
+    ];
+
+    thesauris.filter((thesauri) => {
+      return thesauri._id !== data._id;
+    }).forEach((thesauri) => {
+      if (thesauri.type === 'template') {
+        optionGroups[1].options.push(thesauri);
+        return;
+      }
+      optionGroups[0].options.push(thesauri);
+    });
+
     let labelClass = 'input-group';
     let labelKey = `properties.${index}.label`;
     let requiredLabel = formState.errors[labelKey + '.required'];
@@ -25,7 +40,7 @@ export class FormConfigSelect extends Component {
     return (
       <div>
         <div className="row">
-          <div className="col-sm-4">
+          <div className="col-sm-12">
             <div className={labelClass}>
               <span className="input-group-addon">
               Label
@@ -35,14 +50,18 @@ export class FormConfigSelect extends Component {
               </FormField>
             </div>
           </div>
-          <div className="col-sm-4">
+        </div>
+        <div className="row">
+          <div className="col-sm-12">
             <div className="input-group">
               <span className="input-group-addon">Thesauri</span>
               <SelectField model={`template.data.properties[${index}].content`}>
-                <Select options={thesauris} optionsLabel="name" optionsValue="_id"/>
+                <Select options={optionGroups} optionsLabel="name" optionsValue="_id"/>
               </SelectField>
             </div>
           </div>
+        </div>
+        <div className="row">
           <div className="col-sm-4">
             <div className="input-group">
               <span className="input-group-addon">
@@ -53,21 +72,27 @@ export class FormConfigSelect extends Component {
               <label htmlFor={'required' + this.props.index} className="form-control">Required</label>
             </div>
           </div>
+          <div className="col-sm-4">
+            <div className="input-group">
+              <span className="input-group-addon">
+                <FormField model={`template.data.properties[${index}].showInCard`}>
+                  <input id={'showInCard' + this.props.index} type="checkbox"/>
+                </FormField>
+              </span>
+              <label htmlFor={'showInCard' + this.props.index}
+                     className="form-control"
+                     title="This property will appear in the library cards as part of the basic info.">
+                Show in cards
+                &nbsp;
+                <i className="fa fa-question-circle"></i>
+              </label>
+            </div>
+          </div>
         </div>
-        {(() => {
-          if (duplicatedLabel) {
-            return <div className="row has-error">
-                    <div className="col-sm-4">
-                    <i className="fa fa-exclamation-triangle"></i>
-                      &nbsp;
-                      Duplicated label
-                    </div>
-                  </div>;
-          }
-        })()}
-        <div className="well">
-          <div className="row">
-            <div className="col-sm-4">
+
+        <div className="well-metadata-creator">
+          <div>
+            <div>
               <FormField model={`template.data.properties[${index}].filter`}>
                 <input id={'filter' + this.props.index} type="checkbox"/>
               </FormField>
@@ -79,11 +104,12 @@ export class FormConfigSelect extends Component {
                 <i className="fa fa-question-circle"></i>
               </label>
             </div>
-            <div className="col-sm-8">
+            <div>
               <FilterSuggestions {...ptoperty} />
             </div>
           </div>
         </div>
+
       </div>
     );
   }

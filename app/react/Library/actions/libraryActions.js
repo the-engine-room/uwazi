@@ -1,10 +1,11 @@
 import * as types from 'app/Library/actions/actionTypes';
 import api from 'app/Search/SearchAPI';
-import libraryHelper from 'app/Library/helpers/libraryFilters';
 import {notify} from 'app/Notifications';
 import {actions as formActions} from 'react-redux-form';
 import documents from 'app/Documents';
 import entities from 'app/Entities';
+import {browserHistory} from 'react-router';
+import {toUrlParams} from 'shared/JSONRequest';
 
 export function enterLibrary() {
   return {type: types.ENTER_LIBRARY};
@@ -33,11 +34,8 @@ export function setDocuments(docs) {
 }
 
 export function setTemplates(templates, thesauris) {
-  return function (dispatch, getState) {
-    let filtersState = getState().library.filters.toJS();
-    let documentTypes = Object.assign(libraryHelper.generateDocumentTypes(templates), filtersState.documentTypes);
-    let libraryFilters = filtersState.properties;
-    dispatch({type: types.SET_LIBRARY_TEMPLATES, templates, thesauris, documentTypes, libraryFilters});
+  return function (dispatch) {
+    dispatch({type: types.SET_LIBRARY_TEMPLATES, templates, thesauris});
   };
 }
 
@@ -61,44 +59,48 @@ export function setOverSuggestions(boolean) {
   return {type: types.OVER_SUGGESTIONS, hover: boolean};
 }
 
-export function getDocumentsByFilter(readOnlySearch, limit, getState) {
-  let state = getState().library.filters.toJS();
-  let properties = state.properties;
-  let documentTypes = state.documentTypes;
-
-  let search = Object.assign({}, readOnlySearch);
-
-  search.filters = {};
-  properties.forEach((property) => {
-    let type = 'text';
-    if (property.type === 'date') {
-      type = 'range';
+export function processFilters(readOnlySearch, filters, limit) {
+  const search = Object.assign({}, readOnlySearch);
+  search.aggregations = filters.properties
+  .filter((property) => property.type === 'select' || property.type === 'multiselect' || property.type === 'nested')
+  .map((property) => {
+    if (property.type === 'nested') {
+      return {name: property.name, nested: true, nestedProperties: property.nestedProperties};
     }
-    if (property.active) {
-      search.filters[property.name] = {value: readOnlySearch.filters[property.name], type};
-    }
+    return {name: property.name, nested: false};
   });
 
-  search.types = Object.keys(documentTypes).reduce((selectedTypes, type) => {
-    if (documentTypes[type]) {
-      selectedTypes.push(type);
+  search.filters = {};
+  filters.properties.forEach((property) => {
+    if (!property.active) {
+      return;
     }
-
-    return selectedTypes;
-  }, []);
-
+    let type = 'text';
+    if (property.type === 'date' || property.type === 'multidate') {
+      type = 'range';
+    }
+    if (property.type === 'select' || property.type === 'multiselect') {
+      type = 'multiselect';
+    }
+    if (property.type === 'nested') {
+      type = 'nested';
+    }
+    if (property.type === 'multidaterange') {
+      type = 'nestedrange';
+    }
+    search.filters[property.name] = {value: readOnlySearch.filters[property.name], type};
+  });
+  search.types = filters.documentTypes;
   search.limit = limit;
-
-  return api.search(search);
+  return search;
 }
 
 export function searchDocuments(readOnlySearch, limit) {
   return function (dispatch, getState) {
-    return getDocumentsByFilter(readOnlySearch, limit, getState)
-    .then((docs) => {
-      dispatch(setDocuments(docs));
-      dispatch(hideSuggestions());
-    });
+    const filters = getState().library.filters.toJS();
+    const search = processFilters(readOnlySearch, filters, limit);
+    dispatch(hideSuggestions());
+    browserHistory.push(`/library/${toUrlParams(search)}`);
   };
 }
 

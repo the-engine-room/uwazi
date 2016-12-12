@@ -2,6 +2,7 @@ import React from 'react';
 import {shallow} from 'enzyme';
 import {TemplateCreator} from 'app/Templates/components/TemplateCreator';
 import MetadataTemplate from 'app/Templates/components/MetadataTemplate';
+import Immutable from 'immutable';
 
 describe('TemplateCreator', () => {
   let template = {id: '1', properties: [{label: 'label1'}, {label: 'label2'}]};
@@ -10,10 +11,11 @@ describe('TemplateCreator', () => {
   let saveEntity = jasmine.createSpy('saveEntity');
   let resetTemplate = jasmine.createSpy('resetTemplate');
   let props;
+  let settings = {collection: Immutable.fromJS({})};
   let context;
 
   beforeEach(() => {
-    props = {resetTemplate, saveTemplate, saveEntity, template};
+    props = {resetTemplate, saveTemplate, saveEntity, template, settings};
     context = {router: {isActive: jasmine.createSpy('isActive')}};
   });
 
@@ -28,7 +30,7 @@ describe('TemplateCreator', () => {
 
   describe('when creating a new entity', () => {
     it('should pass the saveEntity action to the MetadataTemplate component', () => {
-      context.router.isActive.and.returnValue(true);
+      props.entity = true;
       render();
       expect(component.find(MetadataTemplate).props().saveTemplate).toBe(saveEntity);
     });

@@ -1,10 +1,24 @@
 #!/bin/bash
 
 echo "Removing ${1:-uwazi_development} index"
-curl -X DELETE http://localhost:9200/${1:-uwazi_development}/
+curl -X DELETE http://185.26.125.86:9200/${1:-cejil}/
 echo -e "\n\nCreating ${1:-uwazi_development} index"
-curl -X PUT http://localhost:9200/${1:-uwazi_development}/ -d '
+curl -X PUT http://185.26.125.86:9200/${1:-cejil}/ -d '
 {
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "folding": {
+          "tokenizer": "keyword",
+          "filter":  [ "lowercase", "asciifolding" ]
+        },
+        "tokenizer": {
+          "tokenizer": "standard",
+          "filter":  [ "lowercase", "asciifolding" ]
+        }
+      }
+    }
+  },
   "mappings" : {
     "_default_" : {
       "_all" : {"enabled" : true, "omit_norms" : true},
@@ -18,18 +32,38 @@ curl -X PUT http://localhost:9200/${1:-uwazi_development}/ -d '
           }
         }
       }, {
-        "string_fields" : {
-          "match" : "*",
+        "fullText_fields" : {
+          "path_match" : "doc.fullText",
           "match_mapping_type" : "string",
           "mapping" : {
-            "type" : "string", "index" : "analyzed", "omit_norms" : true,
-            "fielddata" : { "format" : "disabled" },
+            "type" : "string",
+            "index" : "analyzed",
+            "omit_norms" : true,
+            "analyzer": "standard",
+            "fielddata" : { "format" : "enabled" },
             "fields" : {
               "raw" : {"type": "string", "index" : "not_analyzed", "doc_values" : true, "ignore_above" : 256}
             }
           }
         }
-      }, {
+      }
+      , {
+        "string_fields" : {
+          "match" : "*",
+          "match_mapping_type" : "string",
+          "mapping" : {
+            "type" : "string",
+            "index" : "analyzed",
+            "omit_norms" : true,
+            "analyzer": "tokenizer",
+            "fielddata" : { "format" : "enabled" },
+            "fields" : {
+              "raw" : {"type": "string", "analyzer": "folding"}
+            }
+          }
+        }
+      }
+      , {
         "float_fields" : {
           "match" : "*",
           "match_mapping_type" : "float",
@@ -63,7 +97,13 @@ curl -X PUT http://localhost:9200/${1:-uwazi_development}/ -d '
         "long_fields" : {
           "match" : "*",
           "match_mapping_type" : "long",
-          "mapping" : { "type" : "long", "doc_values" : true }
+          "mapping" : {
+            "type": "long",
+            "doc_values": true,
+            "fields" : {
+              "raw" : {"type": "long", "index" : "not_analyzed"}
+            }
+          }
         }
       }, {
         "date_fields" : {
@@ -77,7 +117,14 @@ curl -X PUT http://localhost:9200/${1:-uwazi_development}/ -d '
           "match_mapping_type" : "geo_point",
           "mapping" : { "type" : "geo_point", "doc_values" : true }
         }
-      } ],
+      }, {
+        "nested_fields" : {
+          "match_mapping_type": "object",
+          "path_match" : "doc.metadata.*",
+          "path_unmatch" : "doc.metadata.*.*",
+          "mapping" : {"type" : "nested"}
+        }
+      }],
       "properties" : {
         "@timestamp": { "type": "date", "doc_values" : true },
         "@version": { "type": "string", "index": "not_analyzed", "doc_values" : true },

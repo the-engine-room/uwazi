@@ -1,22 +1,21 @@
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
-import documents from 'app/Documents';
 import {saveDocument} from 'app/Uploads/actions/uploadsActions';
-import MetadataForm from 'app/Templates/components/MetadataForm';
+import {actions, MetadataForm} from 'app/Metadata';
 
-function mapStateToProps({uploads}) {
+function mapStateToProps({uploads, templates, thesauris}) {
   return {
     model: 'uploads.metadata',
     metadata: uploads.metadata,
     state: uploads.metadataForm,
-    templates: uploads.templates,
-    thesauris: uploads.thesauris
+    templates: templates,
+    thesauris: thesauris
   };
 }
 
 function mapDispatchToProps(dispatch) {
-  return bindActionCreators({changeTemplate: documents.actions.changeTemplate, onSubmit: saveDocument}, dispatch);
+  return bindActionCreators({changeTemplate: actions.changeTemplate, onSubmit: saveDocument}, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(MetadataForm);
